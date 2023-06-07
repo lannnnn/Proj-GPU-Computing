@@ -1,0 +1,7 @@
+The self developed project for course GPU-Computing
+The developing will be split in several steps:
+
+1. finish and full test of the usage of CSR format
+2. test the parMetis method as the current baseline
+3. develope the sequential code as our first version
+4. optimizing... specific methods should be decleared later according to the performance
