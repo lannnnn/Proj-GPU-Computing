@@ -8,7 +8,7 @@
 #include <algorithm>    // std::sort
 #include <numeric> //std::iota
 #include <iterator>
-#include "csr.h"
+#include "../include/matrices.h"
 
 using namespace std;
 

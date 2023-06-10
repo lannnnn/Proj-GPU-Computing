@@ -16,30 +16,47 @@ struct ROW
     |       label  = label according to the block message
     |--------------------------------------------------------------------   */
     int nzRowCount;
+    int labelSize;
+    int rank;
+    int rowIdx = 0;
     std::map<int, double> nzValue; //ranked by column index in default
-    std::vector<int> label;
 
-    void calculate_label(int row_block_size, int ncols) {
-        int label_size = (ncols-1) / row_block_size + 1;
-        int next_edge = row_block_size; 
+    void calculate_label(int row_block_size, int ncols, std::vector<int> &label) {
+        rank = 0;
+        labelSize = (ncols-1) / row_block_size + 1;
+        int next_edge = 1; 
         int current_label = 0;
 
-        label.reserve(label_size);
+        //label.reserve(labelSize);
 
         for(auto it : nzValue){
             if(it.first > ncols) {
                 std::cout << "ERROR: CLOUMN OUT OF RANGE" << std::endl;
                 break;
             }
-	        if(it.first > next_edge) {
-                label.push_back(current_label);     // the last block is all counted
+	        if(it.first >= next_edge * row_block_size) {
+                rank += current_label;
+                label[next_edge-1] = current_label>0?1:0;     // the last block is all counted
+                next_edge ++;
                 current_label = 0;                  // init for the new block
-                while(it.first > next_edge) {       // if it's not in the next block, 
-                    next_edge += row_block_size;    // goto the one after next
-                    label.push_back(current_label); // and fill the next label as 0
+                while(it.first >= next_edge * row_block_size) {       // if it's not in the next block, 
+                    next_edge ++;    // goto the one after next
+                    rank += current_label;
+                    label[next_edge-1] = current_label>0?1:0;  // and fill the next label as 0
                 }
             }
             current_label++;
+        }
+
+        rank += current_label;
+        label[next_edge-1] = current_label>0?1:0; 
+        next_edge ++;
+        current_label = 0;
+
+        // fill the rest as 0
+        while(next_edge < labelSize) {
+            next_edge ++;                // goto the one after next
+            label.push_back(current_label);             // and fill the next label as 0
         }
     }
 
@@ -51,6 +68,6 @@ struct ROW
 		return os;
 	}
 
-    ROW() : nzRowCount(0), nzValue(), label() {}
+    ROW() : nzRowCount(0), labelSize(0), nzValue() {}
 
 };
