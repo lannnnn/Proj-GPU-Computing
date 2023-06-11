@@ -23,6 +23,10 @@ struct CSR
     std::vector<int> colIdx;
     std::vector<double> values;
 
+    CSR() : rows(0), cols(0), nnz(0), rowPtr(rows+1), colIdx(), values() {}
+
+    CSR(int rows, int cols, int nnz) : rows(rows), cols(cols), nnz(nnz), rowPtr(rows+1), colIdx(), values() {}
+
     void clean() {
         /*----------------------------------------------------------------------
         | Free up memory allocated for CSR structs.
@@ -38,15 +42,10 @@ struct CSR
         cols = 0; 
     }
 
-    //constructor for edgelist data
-    // CSR(std::ifstream& infile, std::string delimiter = " ", bool pattern_only = true, MatrixFormat mat_fmt = mtx)
-    // {
-    //     read_from_edgelist(infile, delimiter, pattern_only, mat_fmt);
-    // }
-
-    CSR() : rows(0), cols(0), nnz(0), rowPtr(rows+1), colIdx(), values() {}
-
-    CSR(int rows, int cols, int nnz) : rows(rows), cols(cols), nnz(nnz), rowPtr(rows+1), colIdx(), values() {}
+    //destructor cleans all arrays
+    ~CSR() {
+        clean();
+    }
 
     void addRow(struct ROW &row) {
         rowPtr[row.rowIdx+1] = rowPtr[row.rowIdx] + row.rank;
@@ -83,20 +82,14 @@ struct CSR
         std::cout << std::endl;
     }
 
-    
-    //destructor cleans all arrays
-    ~CSR()
-    {
-        clean();
-    }
-
 };
 
 struct MATRICES
 {
     /*--------------------------------------------------------------
     | Coordinate sparse row (COO) matrix format,
-    | generally not square
+    | design in purpose to read the inordered input file, order the matrix during reading
+    | then convert to CSR
     |==========
     |       cmat  = a CSR struct
     |       rows  = # of rows of the matrix
@@ -106,17 +99,26 @@ struct MATRICES
     int rows;
     int cols;
     int nnz;
-    int max_rank = 0;
     // std::vector<int> rowIdx;
     // std::vector<int> colIdx;
     // std::vector<double> values;
     std::vector<struct ROW> row_message;
 
-    void clean();
+    void clean() {
+        row_message.clear();
+        rows = 0;
+        cols = 0;
+        nnz = 0;
+    }
 
     MATRICES(){}
 
     MATRICES(int rows, int cols, int nnz)
         : rows(rows), cols(cols), nnz(nnz), row_message(rows) {}
+
+    //destructor cleans all arrays
+    ~MATRICES() {
+        clean();
+    }
 };
 

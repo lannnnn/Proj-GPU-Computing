@@ -127,7 +127,8 @@ int main() {
     int label_cols = 64;
     int block_rows = 64;
     int group_number = 4;   // should have better performance if same with thread number
-
+    
+    // method allow inordered input data
     MATRICES matrix = readMTXFileWeighted(filename);
     // print_matrix(matrix, block_rows); //print matrix message
 
@@ -147,17 +148,19 @@ int main() {
             rankMap.insert(std::make_pair(matrix.row_message[i].rank, i));
         }
     }
+    // free the matrix, use csr
+    delete matrix;
     // print_label(label, matrix.rows, labelSize);
     // csr.print();
     // print_map(rankMap);
 
     // init coarse graind group vector
     // we have a little larger buffer to save in case there be one group have more elements than others, but not too much..
-    int coarse_group_rows = matrix.rows/group_number*1.5;
+    int coarse_group_rows = csr.rows/group_number*1.5;
     std::vector<std::vector<int>> coarse_group(group_number,std::vector<int>(coarse_group_rows));
     // init fine graind group vector
     // give little more space for blocks in each thread which can not be totally filled
-    int fine_group_num = (matrix.rows-1)/block_rows + group_number;
+    int fine_group_num = (csr.rows-1)/block_rows + group_number;
     std::vector<std::vector<int>> fine_group(fine_group_num,std::vector<int>(block_rows));
 
     // init the group by rank
@@ -165,7 +168,7 @@ int main() {
         such as social networks, follow a skewed distribution of vertex
         degrees, where there are a few high-degree vertices and many
         low-degree vertices. */
-    if(group_number <= matrix.rows) {
+    if(group_number <= csr.rows) {
         std::multimap<int, int>::iterator itr = rankMap.begin();
         for (int cnt=0; cnt<group_number; cnt++) { 
             coarse_group[cnt][0] = itr->second;
