@@ -41,8 +41,8 @@ struct ROW
                 current_label = 0;                  // init for the new block
                 while(it.first >= next_edge * row_block_size) {       // if it's not in the next block, 
                     next_edge ++;    // goto the one after next
-                    rank += current_label;
-                    label[next_edge-1] = current_label>0?1:0;  // and fill the next label as 0
+                    // rank += current_label;
+                    // label[next_edge-1] = current_label;  // and fill the next label as 0
                 }
             }
             current_label++;
@@ -54,10 +54,10 @@ struct ROW
         current_label = 0;
 
         // fill the rest as 0
-        while(next_edge < labelSize) {
-            next_edge ++;                // goto the one after next
-            label.push_back(current_label);             // and fill the next label as 0
-        }
+        // while(next_edge < labelSize) {
+        //     next_edge ++;                // goto the one after next
+        //     label.push_back(current_label);             // and fill the next label as 0
+        // }
     }
 
     friend std::ostream& operator << (std::ostream& os, ROW& row)

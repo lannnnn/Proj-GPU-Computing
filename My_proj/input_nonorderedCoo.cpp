@@ -105,12 +105,12 @@ void print_matrix(MATRICES matrix, int block_rows) {
     }
 }
 
-void print_label(std::vector<std::vector<int>> label, int rows, int labelSize) {
-    for(int i=0; i<rows; i++) {
-        for(int j=0; j<labelSize; j++) {
+void print_vec(std::vector<std::vector<int>> label) {
+    for(int i=0; i<label.size(); i++) {
+        for(int j = 0; j< label[i].size(); j++) {
             std::cout << label[i][j] << " ";
         }
-            std::cout << std::endl;
+        std::cout << std::endl;
     }
 }
 
@@ -127,6 +127,8 @@ int main() {
     int label_cols = 64;
     int block_rows = 64;
     int group_number = 4;   // should have better performance if same with thread number
+
+    float fine_tau = 0.5;
     
     // method allow inordered input data
     MATRICES matrix = readMTXFileWeighted(filename);
@@ -145,23 +147,22 @@ int main() {
             matrix.row_message[i].rowIdx = i;   // fill the row number
             matrix.row_message[i].calculate_label( label_cols, matrix.cols, label[i]);
             csr.addRow(matrix.row_message[i]);
-            rankMap.insert(std::make_pair(matrix.row_message[i].rank, i));
+            if(matrix.row_message[i].rank != 0) // we do not need the rows which do not contain the nz values
+                rankMap.insert(std::make_pair(matrix.row_message[i].rank, i));
         }
     }
     // free the matrix, use csr
-    delete matrix;
-    // print_label(label, matrix.rows, labelSize);
+    matrix.row_message.clear();
+    // print_vec(label);
     // csr.print();
     // print_map(rankMap);
 
     // init coarse graind group vector
     // we have a little larger buffer to save in case there be one group have more elements than others, but not too much..
-    int coarse_group_rows = csr.rows/group_number*1.5;
-    std::vector<std::vector<int>> coarse_group(group_number,std::vector<int>(coarse_group_rows));
+    std::vector<std::vector<int>> coarse_group(group_number);
     // init fine graind group vector
     // give little more space for blocks in each thread which can not be totally filled
-    int fine_group_num = (csr.rows-1)/block_rows + group_number;
-    std::vector<std::vector<int>> fine_group(fine_group_num,std::vector<int>(block_rows));
+    std::vector<std::vector<int>> fine_group;
 
     // init the group by rank
     /*  reason: many dynamic real-world graphs,
@@ -171,7 +172,7 @@ int main() {
     if(group_number <= csr.rows) {
         std::multimap<int, int>::iterator itr = rankMap.begin();
         for (int cnt=0; cnt<group_number; cnt++) { 
-            coarse_group[cnt][0] = itr->second;
+            coarse_group[cnt].push_back(itr->second);
             rankMap.erase(itr++); 
         }
     }
@@ -182,10 +183,7 @@ int main() {
     //     return -1;
     // }
 
-    // if(!fine_grouping(coarse_group, matrix, fine_group, group_number, coarse_group_rows)) {
-    //     std::cout << "Failed in fine graind grouping... " << std::endl;
-    //     return -1;
-    // }
+    //fine_grouping(coarse_group, matrix, fine_group, group_number, coarse_group_rows, fine_tau, block_rows);
 
     return 0;
 }
