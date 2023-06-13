@@ -126,9 +126,9 @@ int main() {
     std::string filename = "../data/weighted/494_bus.mtx";
     int label_cols = 64;
     int block_rows = 64;
-    int group_number = 4;   // should have better performance if same with thread number
+    int group_number = 1;   // should have better performance if same with thread number
 
-    float fine_tau = 0.5;
+    float fine_tau = 0.9;
     
     // method allow inordered input data
     MATRICES matrix = readMTXFileWeighted(filename);
@@ -183,7 +183,15 @@ int main() {
     //     return -1;
     // }
 
-    //fine_grouping(coarse_group, matrix, fine_group, group_number, coarse_group_rows, fine_tau, block_rows);
+    //tmp fine group test use, all as one group
+    for (auto itr = rankMap.begin(); itr != rankMap.end(); itr++) { 
+        coarse_group[0].push_back(itr->second);
+        rankMap.erase(itr++); 
+    }
+
+    fine_grouping(coarse_group, csr, fine_group, group_number, fine_tau, block_rows);
+
+    print_vec(fine_group);
 
     return 0;
 }
