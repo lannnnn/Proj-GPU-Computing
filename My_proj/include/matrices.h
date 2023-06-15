@@ -19,6 +19,7 @@ struct CSR
     int rows;
     int cols;
     int nnz;
+    double blockDensity;
     std::vector<int> rowPtr;
     std::vector<int> colIdx;
     std::vector<double> values;
@@ -48,11 +49,24 @@ struct CSR
     }
 
     void addRow(struct ROW &row) {
-        rowPtr[row.rowIdx+1] = rowPtr[row.rowIdx] + row.rank;
+        rowPtr[row.rowIdx+1] = rowPtr[row.rowIdx] + row.nzValue.size();
         for(auto it : row.nzValue){
             colIdx.push_back(it.first);
             values.push_back(it.second);
         }
+    }
+
+    double calculateBlockDensity(int block_rows, int block_cols) {
+        int totBlockRows = (rows+1) / block_rows;
+        int totBlockCols = (cols+1) / block_cols;
+        std::vector<int> blocks;
+        for(int i = 0; i < rows; i++) {
+            for(int j=0; j< (rowPtr[i+1]-rowPtr[i]); j++) {
+                blocks.push_back((i / block_rows) * totBlockCols + colIdx[rowPtr[i]+j]/block_cols);
+            }
+        }
+        blocks.erase(std::unique(blocks.begin(), blocks.end()), blocks.end());
+        return (double)nnz / (double)(blocks.size() * block_rows * block_cols);
     }
 
     void print(){
@@ -84,7 +98,7 @@ struct CSR
 
 };
 
-struct MATRICES
+struct COO
 {
     /*--------------------------------------------------------------
     | Coordinate sparse row (COO) matrix format,
@@ -111,13 +125,13 @@ struct MATRICES
         nnz = 0;
     }
 
-    MATRICES(){}
+    COO(){}
 
-    MATRICES(int rows, int cols, int nnz)
+    COO(int rows, int cols, int nnz)
         : rows(rows), cols(cols), nnz(nnz), row_message(rows) {}
 
     //destructor cleans all arrays
-    ~MATRICES() {
+    ~COO() {
         clean();
     }
 };

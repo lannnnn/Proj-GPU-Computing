@@ -4,15 +4,35 @@
 #include <vector>
 #include <map>
 #include "matrices.h"
-#include "row.h"
 
 double HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx) {
     int dist = 0;
     int cols = 0;
+    int refIdx = 0;
 
-    for (int i = 0; i < baseColIdx.size(); i++) {
-        dist += (baseColIdx[i] + refColIdx[i] == 1? 1:0);
-        cols += (baseColIdx[i] + refColIdx[i] > 0? 1:0);
+    for (int i = 0; i < baseColIdx.size();) {
+        if(baseColIdx[i] == refColIdx[refIdx]) {
+            i++;
+            refIdx++;
+        }else if(baseColIdx[i] < refColIdx[refIdx]) {
+            dist++;
+            i++;
+        }else{ 
+            dist++;
+            refIdx++;
+        }
+        cols++;
+        // if ref is at end, add all the base as non-equal
+        if(refIdx >= refColIdx.size()) {
+            dist += baseColIdx.size() - i;
+            cols += baseColIdx.size() - i;
+            break;
+        }
+    }
+    // if base is at end, add all the red as non-equal
+    if(refIdx < refColIdx.size()) {
+        dist += refColIdx.size() - refIdx;
+        cols += refColIdx.size() - refIdx;
     }
     return (double)dist / (double)cols;
 }
@@ -37,8 +57,8 @@ int coarse_grouping(std::vector<std::vector<int>> coarse_group, CSR matrix,
 void fine_grouping(std::vector<std::vector<int>> &coarse_group, CSR &matrix, 
                         std::vector<std::vector<int>> &fine_group, int group_number, float tau, int block_rows) {
     int baseRow, targetRow;
-    std::vector<int> baseColIdx(matrix.cols);
-    std::vector<int> refColIdx(matrix.cols);
+    std::vector<int> baseColIdx;
+    std::vector<int> refColIdx;
     std::vector<int> currentGroup;
     for(int i=0; i<group_number; i++){
         while(!coarse_group[i].empty()) {
@@ -55,10 +75,10 @@ void fine_grouping(std::vector<std::vector<int>> &coarse_group, CSR &matrix,
             currentGroup.push_back(baseRow);
             // build the initial row label
             int col = 0;
-            std::fill(baseColIdx.begin(), baseColIdx.end(), 0);
+            baseColIdx.clear();
             for(int i=0; i < matrix.rowPtr[baseRow+1] - matrix.rowPtr[baseRow]; i++) {
                 col = matrix.colIdx[matrix.rowPtr[baseRow] + i];
-                baseColIdx[col] = 1;
+                baseColIdx.push_back(col);
             }
 
             // iterate all the rows
@@ -67,22 +87,25 @@ void fine_grouping(std::vector<std::vector<int>> &coarse_group, CSR &matrix,
                 coarse_group[i].erase(coarse_group[i].begin());
                 
                 // build the referring row label
-                std::fill(refColIdx.begin(), refColIdx.end(), 0);
+                refColIdx.clear();
                 for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
                     col = matrix.colIdx[matrix.rowPtr[targetRow] + i];
-                    refColIdx[col] = 1;
+                    refColIdx.push_back(col);
                 }
+
+                std::sort(baseColIdx.begin(), baseColIdx.end());
+                std::sort(refColIdx.begin(), refColIdx.end());
 
                 // calculate distance
                 double dist = HammingDistance(baseColIdx, refColIdx);
+
                 // if(dist<tau) add, else ignore
-                // std::cout << "dist=" << dist << "tau=" << tau<< std::endl;
                 if(dist <= tau) {
                     currentGroup.push_back(targetRow);
                     // calculate the new baseColIdx
                     for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
                         col = matrix.colIdx[matrix.rowPtr[targetRow] + i];
-                        baseColIdx[col] = 1;
+                        baseColIdx.erase(std::unique(baseColIdx.begin(), baseColIdx.end()), baseColIdx.end());
                     }
                 } else {
                     coarse_group[i].push_back(targetRow);
@@ -91,6 +114,24 @@ void fine_grouping(std::vector<std::vector<int>> &coarse_group, CSR &matrix,
             // build the new group for rows who still inside
             fine_group.push_back(currentGroup);
             currentGroup = {};
+        }
+    }
+}
+
+void reordering(CSR &omatrix, CSR &nmatrix, std::vector<std::vector<int>> &fine_group) {
+    int targetRow = 0;
+    int rank = 0;
+    int currentRow = 0;
+    for(int i=0; i<fine_group.size(); i++) {
+        for(int j=0; j<fine_group[i].size(); j++) {
+            targetRow = fine_group[i][j];
+            rank = omatrix.rowPtr[targetRow+1] - omatrix.rowPtr[targetRow];
+            nmatrix.rowPtr[currentRow+1] =  nmatrix.rowPtr[currentRow] + rank;
+            for(int k=0; k < rank; k++) {
+                nmatrix.colIdx.push_back(omatrix.colIdx[omatrix.rowPtr[targetRow]+k]); 
+                nmatrix.values.push_back(omatrix.values[omatrix.rowPtr[targetRow]+k]);
+            }
+            currentRow++;
         }
     }
 }

@@ -2,128 +2,10 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
-#include "include/matrices.h"
-#include "include/group.h"
-
-MATRICES readMTXFileWeighted(const std::string& filename) {
-    std::ifstream fin;
-    fin.open(filename,std::ios_base::in);
-    if (!fin.is_open()) {
-        std::cout << "Failed to open file: " << filename << std::endl;
-        return MATRICES();
-    }
-
-    std::string line;
-    int rows = 0;
-    int cols = 0;
-    int nnz = 0;
-
-    int row, col;
-    double value;
-
-    // Skip header lines
-    while (std::getline(fin, line) && line[0] == '%') {
-        // Skip comment lines
-    }
-
-    // Read matrix size and nnz
-    std::istringstream iss(line);
-    iss >> rows >> cols >> nnz;
-
-    MATRICES matrix(rows, cols, nnz);
-    while (std::getline(fin, line)) {
-        std::istringstream iss(line);
-        iss >> row >> col >> value;
-
-        // Adjust for 1-based indexing in MTX format
-        row--;
-        col--;
-
-        matrix.row_message[row].nzRowCount++;
-        matrix.row_message[row].nzValue[col] = value;
-    }
-
-    fin.close();
-    return matrix;
-}
-
-MATRICES readMTXFileUnweighted(const std::string& filename) {
-    std::ifstream fin;
-    fin.open(filename,std::ios_base::in);
-    if (!fin.is_open()) {
-        std::cout << "Failed to open file: " << filename << std::endl;
-        return MATRICES();
-    }
-
-    std::string line;
-    int rows = 0;
-    int cols = 0;
-    int nnz = 0;
-
-    int row, col;
-
-    // Skip header lines
-    while (std::getline(fin, line) && line[0] == '%') {
-        // Skip comment lines
-    }
-
-    // Read matrix size and nnz
-    std::istringstream iss(line);
-    iss >> rows >> cols >> nnz;
-
-    MATRICES matrix(rows, cols, nnz);
-    while (std::getline(fin, line)) {
-        std::istringstream iss(line);
-        iss >> row >> col;
-
-        // Adjust for 1-based indexing in MTX format
-        row--;
-        col--;
-
-        matrix.row_message[row].nzRowCount++;
-        matrix.row_message[row].nzValue[col] = 1;
-    }
-
-    fin.close();
-    return matrix;
-}
-
-void print_matrix(MATRICES matrix, int block_rows) {
-    if (matrix.rows) {
-        // Print the matrix into MATRICES 
-        std::cout << "Rows: " << matrix.rows << std::endl;
-        std::cout << "Columns: " << matrix.cols << std::endl;
-        std::cout << "Non-zero entries: " << matrix.nnz << std::endl;
-
-        std::cout << "Row Messgae: ";
-        for (int i = 0; i < matrix.rows; i++) {
-            // matrix.row_message[i].calculate_label(block_rows, matrix.cols);
-            std::cout << i << std::endl;
-            std::cout << matrix.row_message[i] << std::endl;
-        }
-        std::cout << std::endl;
-    }
-}
-
-void print_vec(std::vector<std::vector<int>> label) {
-    for(int i=0; i<label.size(); i++) {
-        for(int j = 0; j< label[i].size(); j++) {
-            std::cout << label[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
-void print_map(std::multimap<int, int, std::greater<int>> rankMap) {
-    std::multimap<int, int>::iterator itr;
-    for (itr = rankMap.begin(); itr != rankMap.end(); ++itr) {
-        std::cout << '\t' << itr->first << '\t' << itr->second
-             << '\n';
-    }
-}
+#include "include/utilities.h"
 
 int main() {
-    std::string filename = "../data/weighted/494_bus.mtx";
+    std::string filename = "../data/weighted/1138_bus.mtx";
     int label_cols = 64;
     int block_rows = 64;
     int group_number = 1;   // should have better performance if same with thread number
@@ -131,28 +13,20 @@ int main() {
     float fine_tau = 0.9;
     
     // method allow inordered input data
-    MATRICES matrix = readMTXFileWeighted(filename);
+    COO coo = readMTXFileWeighted(filename);
     // print_matrix(matrix, block_rows); //print matrix message
 
-    int labelSize = (matrix.cols-1) / label_cols + 1;
+    //int labelSize = (matrix.cols-1) / label_cols + 1;
 
     // init label list for distance calculation
-    std::vector<std::vector<int>> label(matrix.rows,std::vector<int>(labelSize));
+    std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
     std::multimap<int, int, std::greater<int>> rankMap;
 
-    CSR csr(matrix.rows, matrix.cols, matrix.nnz);
-    // calculate the label
-    if (matrix.rows != 0) {
-        for (int i = 0; i < matrix.rows; i++) {
-            matrix.row_message[i].rowIdx = i;   // fill the row number
-            matrix.row_message[i].calculate_label( label_cols, matrix.cols, label[i]);
-            csr.addRow(matrix.row_message[i]);
-            if(matrix.row_message[i].rank != 0) // we do not need the rows which do not contain the nz values
-                rankMap.insert(std::make_pair(matrix.row_message[i].rank, i));
-        }
-    }
+    CSR csr(coo.rows, coo.cols, coo.nnz);
+    // csr to coo, build the rankMap at same time
+    cooToCsr(coo, csr, rankMap);
     // free the matrix, use csr
-    matrix.row_message.clear();
+    coo.row_message.clear();
     // print_vec(label);
     // csr.print();
     // print_map(rankMap);
@@ -191,7 +65,12 @@ int main() {
 
     fine_grouping(coarse_group, csr, fine_group, group_number, fine_tau, block_rows);
 
-    print_vec(fine_group);
+    //print_vec(fine_group);
+    CSR new_csr(csr.rows, csr.cols, csr.nnz);
+    reordering(csr, new_csr, fine_group);
+    //new_csr.print();
+    std::cout << "original density" << csr.calculateBlockDensity(64, 64) << std::endl;
+    std::cout << "new density" << new_csr.calculateBlockDensity(64, 64) << std::endl;
 
     return 0;
 }
