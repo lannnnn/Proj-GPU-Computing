@@ -2,6 +2,6 @@ The self developed project for course GPU-Computing
 The developing will be split in several steps:
 
 1. finish and full test of the usage of CSR format       passed
-2. test the parMetis method as the current baseline
+2. test the parMetis method as the current baseline - problem: Metis use the different input format(convert); the usage of Metis is much different with our design - the partition number should be fixed at very first and it is using MPI instead of GPU. Temperarily quit this part.
 3. develope the sequential code as our first version     passed
 4. optimizing... specific methods should be decleared later according to the performance
