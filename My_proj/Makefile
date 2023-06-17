@@ -1,23 +1,34 @@
 CC = mpic++
 COPTS = -g -std=c++11 -fPIC -O0 -Wall -Wstrict-aliasing -fstrict-aliasing
 
-PATH_INCLUDES = /home/shuxin.zheng/local/include
-PATH_LIBS = /home/shuxin.zheng/local/lib -lmetis -lGKlib -lparmetis 
+SRC_DIR := src
+OBJ_DIR := obj
+BIN_DIR := .
 
-INCLUDES = -I${PATH_INCLUDES} 
-LFLAGS =  -L${PATH_LIBS} 
+EXE := blocktest
+SRC := $(wildcard $(SRC_DIR)/*.cpp)
 
-TARGET = test_parMetis
-SOURCES = test_parMetis.cpp
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-all: $(TARGET)
+CPPFLAGS := -Iinclude -MMD -MP # -I is a preprocessor flag, not a compiler flag
+CFLAGS   := -Wall              # some warnings about bad code
+LDFLAGS  := -Llib              # -L is a linker flag
+LDLIBS   := -lmetis -lGKlib -lparmetis              
 
-$(TARGET): $(OBJECTS)
-	$(CC) $(COPTS) $(INCLUDES) -o $@ $^ $(LFLAGS)
+all: $(EXE)
 
-.cpp.o:
-	$(CC) $(COPTS) $(INCLUDES) -c $< -o $@ $(LFLAGS)
+.PHONY: all clean
+
+$(EXE): $(OBJ) | $(BIN_DIR)
+	$(CC) $(COPTS) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	$(CC) $(COPTS) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
 
 clean:
-	rm -f $(TARGET) $(OBJECTS)
+	@$(RM) -rv $(BIN_DIR) $(OBJ_DIR) # The @ disables the echoing of the command
+
+-include $(OBJ:.o=.d) # The dash silences errors when files don't exist (yet)
