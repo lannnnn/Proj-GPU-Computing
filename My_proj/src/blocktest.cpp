@@ -6,9 +6,9 @@
 
 int main() {
     std::string filename = "../data/weighted/freeFlyingRobot_4.mtx";
-    int label_cols = 64;
-    int block_rows = 64;
-    int group_number = 1;   // should have better performance if same with thread number
+    // int label_cols = 64;
+    // int block_rows = 64;
+    // int group_number = 1;   // should have better performance if same with thread number
 
     float fine_tau = 0.9;
     
@@ -33,7 +33,7 @@ int main() {
 
     // init coarse graind group vector
     // we have a little larger buffer to save in case there be one group have more elements than others, but not too much..
-    std::vector<std::vector<int>> coarse_group(group_number);
+    std::vector<int> coarse_group;
     // init fine graind group vector
     // give little more space for blocks in each thread which can not be totally filled
     std::vector<std::vector<int>> fine_group;
@@ -43,13 +43,10 @@ int main() {
         such as social networks, follow a skewed distribution of vertex
         degrees, where there are a few high-degree vertices and many
         low-degree vertices. */
-    if(group_number <= csr.rows) {
-        std::multimap<int, int>::iterator itr = rankMap.begin();
-        for (int cnt=0; cnt<group_number; cnt++) { 
-            coarse_group[cnt].push_back(itr->second);
-            rankMap.erase(itr++); 
-        }
-    }
+        
+    std::multimap<int, int>::iterator itr = rankMap.begin();
+    coarse_group.push_back(itr->second);
+    rankMap.erase(itr++); 
 
     // adding a group recorder? or just record by add -1?
     // if(!coarse_grouping(coarse_group, matrix, rankMap, group_number, coarse_group_rows)) {
@@ -59,11 +56,11 @@ int main() {
 
     //tmp fine group test use, all as one group
     for (auto itr = rankMap.begin(); itr != rankMap.end(); itr++) { 
-        coarse_group[0].push_back(itr->second);
+        coarse_group.push_back(itr->second);
         rankMap.erase(itr++); 
     }
 
-    fine_grouping(coarse_group, csr, fine_group, group_number, fine_tau, block_rows);
+    fine_grouping(coarse_group, csr, fine_group, fine_tau);
 
     //print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
