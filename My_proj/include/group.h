@@ -2,8 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <map>
-#include "matrices.h"
+#include "csr.h"
 
 double HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx);
 

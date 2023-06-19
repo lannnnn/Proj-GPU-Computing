@@ -4,7 +4,8 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
-#include "matrices.h"
+#include "csr.h"
+#include "coo.h"
 #include "group.h"
 
 COO readMTXFileWeighted(const std::string& filename);
