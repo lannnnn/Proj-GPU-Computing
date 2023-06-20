@@ -28,7 +28,7 @@ __device__ double HammingDistance(int* rowPtr, int* colIdx, int baserow, int ref
     return (double) dist / (double) cols;
 }
 
-__device__ double combineRows_i_j(int baserow, int* rowIdx, int* groupPtr, int i_index, int j_index) {
+__device__ void combineRows_i_j(int baserow, int* rowIdx, int* groupPtr, int i_index, int j_index) {
     int rank = groupPtr[baserow+j_index+2] - groupPtr[baserow+j_index+1];
     // copy the target rowIdx
     for(int k=0; k<rank; k++) {
@@ -48,8 +48,7 @@ __device__ double combineRows_i_j(int baserow, int* rowIdx, int* groupPtr, int i
     }
 }
 
-__device__ double combineLable(int* rowPtr, int* colIdx, int baserow, int refrow) {
-
+__device__ void combineLable(int* rowPtr, int* colIdx, int baserow, int refrow) {
     int baseRank = rowPtr[baserow+2] - rowPtr[baserow+1];
     int refRank = rowPtr[refrow+2] - rowPtr[refrow+1];
 
@@ -64,7 +63,7 @@ __device__ double combineLable(int* rowPtr, int* colIdx, int baserow, int refrow
             tmpLabel[rankIdx] = colIdx[rowPtr[refrow+1] + j]
         }
     }
-    
+
     if(i >= baseRank) {
         for(int k = j; k<refRank; k++, rankIdx++) {
             tmpLabel[rankIdx] = colIdx[rowPtr[refrow+1] + k];
@@ -72,12 +71,23 @@ __device__ double combineLable(int* rowPtr, int* colIdx, int baserow, int refrow
     }
     if(j >= refRank) dist += (baseRank - i) {
         for(int k = i; k<baseRank; k++, rankIdx++) {
-            tmpLabel[rankIdx] = colIdx[rowPtr[baserow+1] + k];
+            tmpLabel[rankIdx] = colIdx
         }
     }
 
     // combine the label back to the list
+    int rankdiff = rankIdx - baseRank;
+    for(int k=rowPtr[refrow+2]-1; k>=rowPtr[baserow+1]+rankIdx; k--) {
+        colIdx[k] = colIdx[k-rankdiff];
+    }
 
+    for(int k=0; k<rankdiff; k--) {
+        colIdx[rowPtr[baserow+1]+k] = tmpLabel[k];
+    }
+
+    for(int k=baserow; k<refrow; k++) {
+        rowPtr[baserow+2] = rowPtr[baserow+2] + rankdiff;
+    }
 }
 
 __device__ void fine_grouping(int* rowPtr, int* colIdx, float tau, int* rowIdx, int* groupPtr, 
