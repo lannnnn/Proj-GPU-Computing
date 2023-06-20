@@ -15,7 +15,7 @@ EXEPAR := parmetistest
 PAR := $(wildcard $(PAR_DIR)/*.cpp)
 
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/matrices.o
+PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o 
 
 CPPFLAGS := -Iinclude -MMD -MP # -I is a preprocessor flag, not a compiler flag
 LDFLAGS  := -Llib              # -L is a linker flag
@@ -44,28 +44,23 @@ $(BIN_DIR) $(OBJ_DIR):
 CUDA_OBJ_DIR = $(OBJ_DIR)/cuda
 CUDA_SRC_DIR = $(SRC_DIR)/cuda
 
-CUDA_SRC = $(wildcard $(CUDA_SRC_DIR)/*.cpp)
-CUDA_OBJECTS := $(CUDA_SRC: $(CUDA_SRC_DIR)/%.cpp=$(CUDA_OBJ_DIR)/%.o) $(OBJ)
+CUDA_SRC = $(wildcard $(CUDA_SRC_DIR)/*.cpp $(CUDA_SRC_DIR)/*.cu)
+CUDA_OBJECTS := $(CUDA_SRC: $(CUDA_SRC_DIR)/%.cpp=$(CUDA_OBJ_DIR)/%.o) $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o 
 
 CUDA_CXXFLAGS += -std=c++11 -m64 -O3 -arch=sm_70
 
 $(CUDA_OBJ_DIR)/%.o : $(CUDA_SRC_DIR)/%.cpp
-	@mkdir -p $(@D)
-	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) $(CUDA_LIBRARY) -o $@ -c $<
+	mkdir -p $(CUDA_OBJ_DIR)
+	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ -c $<
 
-$(CUDA_OBJ_DIR)/%.o : $(CUDA_TEST_DIR)/%.cpp
-	@mkdir -p $(@D)
-	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) $(CUDA_LIBRARY) -o $@ -c $<
-
-$(CUDA_APP_DIR)/% : $(CUDA_OBJ_DIR)/%.o $(CUDA_OBJECTS)
-	@mkdir -p $(@D)
-	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) $(CUDA_LDFLAGS) -o $@ $?
+$(CUDA_OBJ_DIR)/% : $(CUDA_OBJ_DIR)/%.o $(CUDA_OBJECTS)
+	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $?
 
 #-------------------------------------------------------------------------
 
 .PHONY: all clean
 
-cuda : $(CUDA_APP_DIR)/block_cuda
+cuda : $(CUDA_OBJ_DIR)/block_cuda
 
 clean:
 	@$(RM) -rv $(BIN_DIR)/$(EXEBLOCK) $(BIN_DIR)/$(EXEPAR) $(OBJ_DIR) # The @ disables the echoing of the command

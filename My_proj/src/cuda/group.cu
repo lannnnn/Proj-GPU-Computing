@@ -1,78 +1,124 @@
 #include <stdio.h>
-#include "cuda_impl.h"
-#include <thrust/copy.h>
 
-__device__ double HammingDistance(thrust::device_vector<int> baseColIdx, thrust::device_vector<int> refColIdx) {
+__device__ double HammingDistance(int* rowPtr, int* colIdx, int baserow, int refrow, int* groupPtr) {
+    // if the ref row is empty, return 1;
+    if(groupPtr[refrow+2] - groupPtr[refrow+1] == 0) return 1;
+
+    int baseRank = rowPtr[baserow+2] - rowPtr[baserow+1];
+    int refRank = rowPtr[refrow+2] - rowPtr[refrow+1];
+
     int dist = 0;
-    int cols = baseColSize.size() + refColSize.size();
-    int refIdx = 0;
+    int cols = baseRank + refRank;
+    int i, j;
 
-    for (int i = 0; i < baseColSize.size(); i++) {
-        for(int j=0; j < refColSize.size(); j++) {
-            if(baseColIdx[i] == refColIdx[j]) {
-                cols --;
-                break;
+    for(i=0, j=0; i<baseRank, j<refRank;) {
+        if(colIdx[rowPtr[baserow+1] + i] == colIdx[rowPtr[refrow+1] + j]) {
+            cols --;
+        } else if(colIdx[rowPtr[baserow+1] + i] < colIdx[rowPtr[refrow+1] + j]) {
+            dist ++;
+            i++;
+        } else {
+            dist ++;
+            j++;
+        }
+    }
+    if(i >= baseRank) dist += (refRank - j);
+    if(j >= refRank) dist += (baseRank - i);
+
+    return (double) dist / (double) cols;
+}
+
+__device__ double combineRows_i_j(int baserow, int* rowIdx, int* groupPtr, int i_index, int j_index) {
+    int rank = groupPtr[baserow+j_index+2] - groupPtr[baserow+j_index+1];
+    // copy the target rowIdx
+    for(int k=0; k<rank; k++) {
+        tmpIdx[k] = rowIdx[groupPtr[baserow+j_index+1]+k];
+    }
+    // change the row index
+    for(int k=j_index+1; k>i_index+1; k--) {
+        groupPtr[baserow + k]+= rank;
+    }
+    // move all the other row index back
+    for(int k=groupPtr[baserow+j_index+1]; k>groupPtr[baserow+i_index+2]; k--) {
+        rowIdx[k + rank] = rowIdx[k];
+    }
+    // add the index into blank
+    for(int k=0; k<rank; k++) {
+        rowIdx[groupPtr[baserow+i_index+2] + k] = tmpIdx[k];
+    }
+}
+
+__device__ double combineLable(int* rowPtr, int* colIdx, int baserow, int refrow) {
+
+    int baseRank = rowPtr[baserow+2] - rowPtr[baserow+1];
+    int refRank = rowPtr[refrow+2] - rowPtr[refrow+1];
+
+    int* tmpLabel(baseRank + refRank);
+    int rankIdx = 0
+    int i, j;
+
+    for(i=0, j=0; i<baseRank, j<refRank; rankIdx++) {
+        if(colIdx[rowPtr[baserow+1] + i] <= colIdx[rowPtr[refrow+1] + j]) {
+            tmpLabel[rankIdx] = colIdx[rowPtr[baserow+1] + i];
+        } else {
+            tmpLabel[rankIdx] = colIdx[rowPtr[refrow+1] + j]
+        }
+    }
+    
+    if(i >= baseRank) {
+        for(int k = j; k<refRank; k++, rankIdx++) {
+            tmpLabel[rankIdx] = colIdx[rowPtr[refrow+1] + k];
+        }
+    }
+    if(j >= refRank) dist += (baseRank - i) {
+        for(int k = i; k<baseRank; k++, rankIdx++) {
+            tmpLabel[rankIdx] = colIdx[rowPtr[baserow+1] + k];
+        }
+    }
+
+    // combine the label back to the list
+
+}
+
+__device__ void fine_grouping(int* rowPtr, int* colIdx, float tau, int* rowIdx, int* groupPtr, 
+                                    int group_size, int baserow, int nrows, int nnz) {
+    int* tmpIdx(nrows);
+    for(int i=0; i<group_size; i++) {
+        for(int j = i+1; j<group_size; j++) {
+            // if the two rows/group is close enough, group together
+            if(HammingDistance(rowPtr, colIdx, baserow+i, baserow+j, groupPtr) < tau) {
+                // combine the rows into one group
+                combineRows(baserow, rowIdx, groupPtr, i, j);
+                // build the new label
+                combineLable(rowPtr, colIdx, baserow+i, baserow+j);
             }
         }
-        dist++;
-    }
-    return (double)dist / (double)cols;
-}
-
-__device__ void fine_grouping(int rowIdx, int group_size, CSR &csr, double tau, int ncols) {
-    // thrust::device_vector<int> baseColIdx;
-    // thrust::device_vector<int> refColIdx;
-    // thrust::device_vector<int> remainList;
-    // int rowsRemain = remainList.size();
-
-    // // list the remainning ref rows
-    // for(int i=0; i<rowsRemain; i++) {
-    //     remainList.push_back(rowIdx+i);
-    // }
-
-    // // build the base label of the first row
-    // for(int i=0; i < csr.rowPtr[rowIdx+1] - csr.rowPtr[rowIdx]; i++) {
-    //     baseColIdx[baseColSize] = csr.colIdx[csr.rowPtr[rowIdx] + i];
-    //     baseColSize++;
-    // }
-
-
-    // while(rowsRemain > 0) {
-    //     rowIdx = remainList[0];
-    //     // build the base label of the first ref row
-    //     for(int i=0; i < csr.rowPtr[rowIdx+1] - csr.rowPtr[rowIdx]; i++) {
-    //         refColIdx[refColSize] = csr.colIdx[csr.rowPtr[rowIdx] + i];
-    //         refColSize++;
-    //     }
-    //     if(HammingDistance(baseColIdx, refColIdx, baseColSize, refColSize) < tau) {
-
-    //     } else {
-
-    //     }
-    // }
-}
-
-__device__ void calculate_label(CSR &csr, int rowIdx, int group_size, thrust::device_vector<GroupRow> groupRows) {
-    for(int i=0; i<group_size, i++) {
-        groupRows[rowIdx].rowIdx.push_back(rowIdx);
-        for(int j=0; j < csr.rowPtr[rowIdx+1] - csr.rowPtr[rowIdx]; j++) {
-            col = csr.colIdx[csr.rowPtr[rowIdx] + j];
-            groupRows[rowIdx].lable.push_back(col);
-        }
-        rowIdx++;
     }
 }
 
-__global__ void gpu_grouping(CSR &csr, float tau, int nrows, int ncols, thrust::device_vector<GroupRow> groupRows) {
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* rowIdx, int* groupPtr, int nrows, int nnz) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int group_size = 0;
     // take four rows for one thread
-    int rowIdx = idx * rows_per_thread;
-    if(rowIdx < nrows) {
-        group_size = (nrows - rowIdx) > rows_per_thread? rows_per_thread:(nrows - rowIdx);
-    };
-    // create the label for each line
-    calculate_label(csr, rowIdx, group_size, groupRows);
+    int baserow = idx * rows_per_thread;
+    if(baserow < nrows) {
+        if((nrows - baserow) > rows_per_thread) {
+            group_size = rows_per_thread;
+        } else {
+            group_size = nrows - baserow;
+        }
+    }
+
+    if(idx == 0) {
+        for(int i=0; i<nrows; i++) {
+            rowIdx[i] = i;
+            groupPtr[i] = i;
+        }
+        groupPtr[i+1] = i+1;
+    }
+
+    // synchronize();
+
     // calculate the distance
-    //fine_grouping(rowIdx, group_size, csr, tau, ncols);
+    fine_grouping(rowPtr, colIdx, tau, rowIdx, groupPtr, group_size, baserow, nrows, nnz);
 }
