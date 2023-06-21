@@ -57,7 +57,7 @@ $(CUDA_OBJ_DIR)/%.o : $(CUDA_SRC)
 
 $(CUDA_OBJ_DIR)/block_cuda.o: $(CUDA_SRC_DIR)/block_cuda.cpp
 	mkdir -p $(CUDA_OBJ_DIR)
-	$(CC) $(COPTS) $(CUDA_INCLUDE) -c $< -o $@
+	$(CC) $(COPTS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@
 
 $(CUDA_OBJ_DIR)/% : $(CUDA_OBJ_DIR)/%.o $(CUDA_OBJECTS)
 	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $?

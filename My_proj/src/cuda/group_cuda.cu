@@ -113,6 +113,7 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
 
     // need a global value to check if at leat one group is changed, otherwise stop
     while(change) {
+        change = 0;
         // check the number of groups in duty
         if(groupSize < idx * rows_per_thread) break; // if no group left, finish this thread
         if((groupSize-baserow) > rows_per_thread) {
@@ -127,6 +128,7 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
                 refrow = groupList[baserow+j];   // define the group which should be compared for
                 // grouping
                 if(HammingDistance(groupInfo[tarrow], groupInfo[refrow])) {
+                    change = 1; // if any of the group changed, keep changing
                     combineGroup(groupInfo[tarrow], groupInfo[refrow]);
                 }
             }

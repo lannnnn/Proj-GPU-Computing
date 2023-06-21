@@ -2,10 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include "utilities.h"
 #include "cuda_impl.h"
 
 int main() {
-    std::string filename = "../data/weighted/freeFlyingRobot_4.mtx";
+    std::string filename = "../../data/weighted/freeFlyingRobot_4.mtx";
     // int label_cols = 64;
     // int block_rows = 64;
     // int group_number = 1;   // should have better performance if same with thread number
@@ -60,7 +61,11 @@ int main() {
         rankMap.erase(itr++); 
     }
 
-    fine_grouping(coarse_group, csr, fine_group, fine_tau);
+    // data copy to GPU
+
+    // gpu_grouping<<< , ,>>>(rowPtr, colIdx, tau, groupList, groupInfo, groupSize, nnz);
+
+    // copy data back
 
     //print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
