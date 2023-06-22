@@ -17,8 +17,11 @@ __device__ double HammingDistance(GroupInfo &tarrow, GroupInfo &refrow) {
     int i = 0;
     int j = 0;
 
-    //printf("tarrow.rank = %d\n", tarrow.rank);
-    //printf("refrow.rank = %d\n", refrow.rank);
+    // printf("tarrow.rank = %d\n", tarrow.rank);
+    // printf("refrow.rank = %d\n", refrow.rank);
+    // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", tarrow.label == NULL, tarrow.rank);
+    // if(tarrow.label != NULL) printf("tarrow.label[0] = %d", tarrow.label[0]);
+    //printf("refrow.label[j] = %d, rank = %d\n", refrow.label[0], refrow.rank);
 
     while(i<tarrow.rank && j<refrow.rank) {
         if(tarrow.label[i] == refrow.label[j]) {
@@ -39,37 +42,37 @@ __device__ double HammingDistance(GroupInfo &tarrow, GroupInfo &refrow) {
 }
 
 __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
-    int rank=0;
-    int* tempLabel = new int[tarrow.rank + refrow.rank];
-
     int size = tarrow.size + refrow.size;
-    int* tmpRow = new int[size];
+    int* tempLabel = (int*)malloc((tarrow.rank+refrow.rank)*sizeof(int));
+    int* tmpRow = (int*)malloc((size)*sizeof(int));
 
-    int i,j;
+    int rank=0;
+    int i=0;
+    int j=0;
     
     // combine the label
-    for(i=0, j=0; i<tarrow.rank, j<refrow.rank;) {
+    while(i<tarrow.rank && j<refrow.rank) {
+        // printf("tarrow.label[%d] = %d\n", i, tarrow.label[i]);
+        // printf("tarrow.label[%d] = %d\n", j, tarrow.label[j]);
         if(tarrow.label[i] == refrow.label[j]) {
-            tempLabel[rank++] = tarrow.label[i];
-            i++; j++;
-        } else if(tarrow.label[i] < refrow.label[j]) {
-            tempLabel[rank++] = tarrow.label[i];
-            i++;
-        } else {
-            tempLabel[rank++] = refrow.label[j];
+            tempLabel[rank++] = tarrow.label[i++];
             j++;
+        } else if(tarrow.label[i] < refrow.label[j]) {
+            tempLabel[rank++] = tarrow.label[i++];
+        } else {
+            tempLabel[rank++] = refrow.label[j++];
         }
     }
 
     if(i >= tarrow.rank) {
-        for(i = j; i<refrow.rank; i++) {
-            tempLabel[rank++] = refrow.label[i];
+        for(; j<refrow.rank; j++) {
+            tempLabel[rank++] = refrow.label[j];
         }
     }
 
     if(j >= refrow.rank) {
-        for(j = i; j<tarrow.rank; j++) {
-            tempLabel[rank++] = tarrow.label[j];
+        for(; i<tarrow.rank; i++) {
+            tempLabel[rank++] = tarrow.label[i];
         }
     }
 
@@ -77,7 +80,6 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     for(i=0; i<tarrow.size; i++) {
         tmpRow[i] = tarrow.rows[i];
     }
-    i--;
 
     for(j=0; j<refrow.size; j++) {
         tmpRow[i+j] = refrow.rows[j];
@@ -90,13 +92,15 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     tarrow.rows = tmpRow;
 
     // clear the refrow
+    refrow.alive = 0;
     refrow.rank = 0;
     refrow.size = 0;
     refrow.label = NULL;
     refrow.rows = NULL;
+    //printf("refrow.row[j] = %d\n", tmpRow[size-1]);
 }
 
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int groupSize, int nnz) {
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int group_thread = 0;
     // take (rows_per_thread) rows for one thread
@@ -105,81 +109,81 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
     int gap=0;
     cudaError_t error; 
 
-    //multi_grid_group g = this_multi_grid();
-
     // build the groupInfo
-    if(idx < groupSize) {
+    if(idx < groupSize[0]) {
         groupInfo[idx].alive = 1;
         groupInfo[idx].size = 1;
-        //cudaMalloc((int**)&groupInfo[idx].rows, sizeof(int));
+        //group row info -> combine the last resultList according to groupInfo *********************
         groupInfo[idx].rows=(int*)malloc(sizeof(int));
         groupInfo[idx].rows[0] = idx;
         //cudaMalloc((int**)&groupInfo[idx].label, groupInfo[idx].rank*sizeof(int));
         groupInfo[idx].rank = rowPtr[idx+1] - rowPtr[idx];
-        groupInfo[idx].label = (int*)malloc(groupInfo[idx].rank * sizeof(int));
-        for(int j=0; j<groupInfo[idx].rank; j++) {
-            groupInfo[idx].label[j] = colIdx[rowPtr[idx]+j];
-        }
+        if(groupInfo[idx].rank > 0) {
+            groupInfo[idx].label = (int*)malloc(groupInfo[idx].rank * sizeof(int));
+            if(groupInfo[idx].label == NULL) {
+                printf("label allocation error");
+                return;
+            }
+            for(int j=0; j<groupInfo[idx].rank; j++) {
+                groupInfo[idx].label[j] = colIdx[rowPtr[idx]+j];
+            }
+        } 
     }
 
     __syncthreads();
 
-    if(idx%rows_per_thread==0 || idx < groupSize) {
-        if((groupSize - idx * rows_per_thread) > rows_per_thread)
+    if(idx%rows_per_thread==0 && idx < groupSize[0]) {
+        if((groupSize[0] - idx) >= rows_per_thread)
             group_thread = rows_per_thread;
         else
-            group_thread = groupSize - idx * rows_per_thread;
+            group_thread = groupSize[0] - idx;
     }
 
     // compare between each groups
     if(group_thread > 1) {
         for(int i=0; i<group_thread; i++) {
-            tarrow = groupList[baserow+i]; // define the group used as base
+            tarrow = idx+i; // define the group used as base
             if(tarrow == -1) continue; 
             for(int j=i+1; j<group_thread; j++) {
-                refrow = groupList[baserow+j];   // define the group which should be compared for
+                refrow = idx+j;   // define the group which should be compared for
                 if(refrow == -1) continue; 
                 // grouping
+                // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", groupInfo[tarrow].label == NULL, groupInfo[tarrow].rank);
+                // printf("refroe.label == NULL? %d, refroe.rank = %d\n", groupInfo[refrow].label == NULL, groupInfo[refrow].rank);
                 if(HammingDistance(groupInfo[tarrow], groupInfo[refrow]) < tau) {
                     combineGroup(groupInfo[tarrow], groupInfo[refrow]);
-                    //printf("distance = %f\n", HammingDistance(groupInfo[tarrow], groupInfo[refrow]));
-                    groupList[refrow] = -1;
+                    // printf("distance = %f\n", HammingDistance(groupInfo[tarrow], groupInfo[refrow]));
                 }
             }
         }
     }
+
     __syncthreads();
 
-    // // after group, change the groupList in the thread 0
-    // if(idx == 0) {
-    //     int irow =0;
-    //     gap = 0; // initialize the gap to 0
-    //     for(int i=0; i<groupSize; i++) {
-    //         if(groupList[i] == -1) {
-    //             gap++;          // ignore one group
-    //         } else {
-    //             resultList[irow] = groupList[i];
-    //             irow ++;
-    //         }
-    //     }
-    //     if(gap)  {
-    //         change = 1; // if any of the group changed, keep changing
-    //         resultList[irow] = -1;
-    //     }
-    // }
-    // // wait for groupList change
-    // __syncthreads();
+    // after group, change the groupList in the thread 0
+    if(idx == 0) {
+        groupList[0] = 0;
+        int irow =0;
+        gap = 0; // initialize the gap to 0
+        for(int i=0; i<groupSize[0]; i++) {
+            if(groupInfo[i].alive) {
+                groupList[i+1] = groupList[i] + groupInfo[i].size;
+                for(int j=0; j<groupInfo[i].size; j++) {
+                    resultList[groupList[i]+j] = groupInfo[i].rows[j];
+                }
+                gap ++;
+            }
+        }
+        if(gap < groupSize[0])  {
+            change = 1; // if any of the group changed, keep changing
+            groupSize[0] = gap;
+        }
+    }
+    // update the csr info in another warp(groupInfo read only)
+    if(idx == 32) {
 
-    // // organize the result 
-    // int irow = 0;
-    // if(idx == 0) { 
-    //     for(int i=0; i<groupSize; i++) {
-    //         for(int j=0; j<groupInfo[resultList[i]].size; j++) {
-    //             resultList[irow] = groupInfo[resultList[i]].rows[j];
-    //             irow++;
-    //         }
-    //     }
-    // }
-    // __syncthreads();
+    }
+    // wait for groupList change
+    __syncthreads();
     return;
 }

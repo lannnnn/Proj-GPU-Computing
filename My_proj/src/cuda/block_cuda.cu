@@ -51,50 +51,57 @@ int main() {
     int* d_rowPtr;
     int* d_colIdx;
     int* d_groupList;
-    int* resultList;
+    int* d_resultList;
+    int* d_groupSize;
     GroupInfo* d_groupInfo;
-    cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int));
-    cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int));
-    cudaMalloc((int**)&d_groupList, csr.rows * sizeof(int));
-    cudaMalloc((int**)&resultList, csr.rows * sizeof(int));
-    cudaMalloc((GroupInfo**)&d_groupInfo, csr.rows * sizeof(GroupInfo));
+    CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_groupList, (csr.rows+1) * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_resultList, csr.rows * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
+    CHECK( cudaMalloc((GroupInfo**)&d_groupInfo, csr.rows * sizeof(GroupInfo)));
     // data copy to GPU
-    cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice);
+    CHECK(cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK(cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
 
     // groupList initialized as 0..n
-    int* h_groupList = (int*)malloc(csr.rows * sizeof(int));
-    for(int i=0; i< csr.rows; i++) {
+    int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
+    int* h_resultList = (int*)malloc(csr.rows * sizeof(int));
+    for(int i=0; i<= csr.rows; i++) {
         h_groupList[i] = i;
     }
 
-    cudaMemcpy(d_groupList, h_groupList, csr.rows * sizeof(int), cudaMemcpyHostToDevice);
+    int* h_groupSize = (int*)malloc(sizeof(int));
+    h_groupSize[0] = csr.rows;
+    CHECK(cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK(cudaMemcpy(d_groupList, h_groupList, csr.rows * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK(cudaMemcpy(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice));
 
     int grd_size = (csr.rows+BLK_SIZE)/BLK_SIZE;
 
     dim3 block_size(BLK_SIZE, 1, 1);
     dim3 grid_size(grd_size, 1, 1);
-    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, resultList, csr.rows,csr.nnz);
+    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, d_groupSize, csr.nnz);
     // test<<< grid_size, block_size>>>(d_groupList, resultList);
-    cudaDeviceSynchronize();
     // copy data back
-    cudaMemcpy(h_groupList, d_groupList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost);
+    CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
+    CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
     // clear the memory
-    cudaFree(d_rowPtr);
-    cudaFree(d_colIdx);
-    cudaFree(d_groupList);
-    cudaFree(d_groupInfo);
-    cudaFree(resultList);
+    CHECK( cudaFree(d_rowPtr));
+    CHECK( cudaFree(d_colIdx));
+    CHECK( cudaFree(d_groupList));
+    CHECK( cudaFree(d_groupInfo));
+    CHECK( cudaFree(d_resultList));
 
     std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
-    fine_group[0] = std::vector<int>(&h_groupList[0], &h_groupList[0] + csr.rows);
-    print_vec(fine_group);
-    //CSR new_csr(csr.rows, csr.cols, csr.nnz);
-    //reordering(csr, new_csr, fine_group);
+    fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
+    //print_vec(fine_group);
+    CSR new_csr(csr.rows, csr.cols, csr.nnz);
+    reordering(csr, new_csr, fine_group);
 
     //new_csr.print();
-    //std::cout << "original density" << csr.calculateBlockDensity(64, 64) << std::endl;
-    //std::cout << "new density" << new_csr.calculateBlockDensity(64, 64) << std::endl;
+    std::cout << "original density" << csr.calculateBlockDensity(2, 2) << std::endl;
+    std::cout << "new density" << new_csr.calculateBlockDensity(2, 2) << std::endl;
 
     return 0;
 }

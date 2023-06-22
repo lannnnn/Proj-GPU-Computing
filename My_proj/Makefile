@@ -48,7 +48,7 @@ CUDA_SRC_DIR = $(SRC_DIR)/cuda
 
 CUDA_OBJECTS := $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o 
 
-CUDA_CXXFLAGS += -std=c++17 -m64 -gencode=arch=compute_80,code=sm_80 -w -g -G
+CUDA_CXXFLAGS += -std=c++11 -m64 -gencode=arch=compute_80,code=sm_80 -w -g -G
 
 $(CUDA_OBJ_DIR)/block_cuda.o: $(CUDA_SRC_DIR)/block_cuda.cu
 	mkdir -p $(CUDA_OBJ_DIR)

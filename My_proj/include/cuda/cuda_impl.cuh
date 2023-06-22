@@ -28,7 +28,7 @@ __device__ int change = 1; // global value to check if clustering should finish
 //Testa<<<1,1>>>();
 //cudaMemcpy(&h_groupInfo, d_groupInfo, nrows*sizeof(GroupInfo), cudaMemcpyDeviceToHost);
 __global__ void test(int* groupList, int* resultList);
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int groupSize, int nnz);
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz);
 
 #define CHECK(call)                                   \
 do                                                    \
