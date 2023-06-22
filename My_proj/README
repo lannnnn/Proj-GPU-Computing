@@ -5,3 +5,11 @@ The developing will be split in several steps:
 2. test the parMetis method as the current baseline - problem: Metis use the different input format(convert); the usage of Metis is much different with our design - the partition number should be fixed at very first and it is using MPI instead of GPU. Temperarily quit this part.
 3. develope the sequential code as our first version     passed
 4. optimizing... specific methods should be decleared later according to the performance
+
+Usage: 
+    for CPU code: in this dir run `make all`
+        the target named 'blocktest' will be build in this dir
+    for CUDA code: make sure have nvcc compiler. run `make cuda`
+        the target named block_cuda
+
+To run the code in cluster, referring to the script 'slurm.sh'. This script can be directly use in MARZOLA
