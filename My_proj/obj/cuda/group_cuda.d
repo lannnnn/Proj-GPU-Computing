@@ -1,4 +1,4 @@
-obj/cuda/block_cuda.o : src/cuda/block_cuda.cu \
+obj/cuda/group_cuda.o : src/cuda/group_cuda.cu \
     /usr/local/cuda-12.1/include/cuda_runtime.h \
     /usr/local/cuda-12.1/include/crt/host_config.h \
     /usr/local/cuda-12.1/include/builtin_types.h \

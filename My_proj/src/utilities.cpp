@@ -119,6 +119,7 @@ void print_map(std::multimap<int, int, std::greater<int>> rankMap) {
 
 int cooToCsr(COO &coo, CSR &csr, std::multimap<int, int, std::greater<int>> &rankMap) {
     if (coo.rows != 0) {
+        csr.rowPtr[0] = 0;
         for (int i = 0; i < coo.rows; i++) {
             coo.row_message[i].rowIdx = i;   // fill the row number
             csr.addRow(coo.row_message[i]);
