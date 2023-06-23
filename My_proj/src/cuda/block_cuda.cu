@@ -95,8 +95,8 @@ int main() {
 
     std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
     fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    print_pointer(h_groupList, h_groupSize[0]+1);
-    print_vec(fine_group);
+    // print_pointer(h_groupList, h_groupSize[0]+1);
+    // print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 
@@ -109,6 +109,8 @@ int main() {
     // CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
     // CHECK( cudaMemcpy(h_rowPtr, d_rowPtr, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
     // CHECK( cudaMemcpy(h_colIdx, d_colIdx, h_rowPtr[h_groupSize[0]] * sizeof(int), cudaMemcpyDeviceToHost));
+    // print_pointer(h_rowPtr, h_groupSize[0]+1);
+    // print_pointer(h_colIdx, h_rowPtr[h_groupSize[0]]);
 
     // CHECK( cudaMemcpy(d_colIdx, h_colIdx, h_rowPtr[h_groupSize[0]] * sizeof(int), cudaMemcpyHostToDevice));
     // CHECK( cudaMemcpy(d_rowPtr, h_rowPtr, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyHostToDevice));
@@ -131,15 +133,15 @@ int main() {
     CHECK( cudaFree(d_resultList));
 
     fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    print_pointer(h_groupList, h_groupSize[0]+1);
-    print_vec(fine_group);
+    //print_pointer(h_groupList, h_groupSize[0]+1);
+    // print_vec(fine_group);
     CSR new_csr1(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr1, fine_group);
 
     //new_csr.print();
     std::cout << "h_groupSize = " << h_groupSize[0] << std::endl;
-    std::cout << "original density" << new_csr.calculateBlockDensity(2, 2) << std::endl;
-    std::cout << "new density" << new_csr1.calculateBlockDensity(2, 2) << std::endl;
+    std::cout << "original density" << new_csr.calculateBlockDensity(4, 4) << std::endl;
+    std::cout << "new density" << new_csr1.calculateBlockDensity(4, 4) << std::endl;
 
     return 0;
 }

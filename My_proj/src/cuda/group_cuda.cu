@@ -180,21 +180,19 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
             groupSize[0] = gap;
         }
     }
-    // update the csr info in another warp(groupInfo read only)
+    // update the csr info in another block(groupInfo read only)
     if(idx == 32) {
         int irow =0;
-        int* tmpRowPtr=(int*)malloc(nnz * sizeof(int));
-        int* tmpColIdx=(int*)malloc(nnz * sizeof(int));
+        rowPtr[0] = 0;
         for(int i=0; i<nnz; i++) {
             if(groupInfo[i].alive) {
-                tmpRowPtr[idx+1] = tmpRowPtr[idx] + groupInfo[i].rank;
+                rowPtr[irow+1] = rowPtr[irow] + groupInfo[i].rank;
                 for(int j=0; j<groupInfo[i].rank; j++) {
-                    tmpColIdx[tmpRowPtr[idx]+j] = groupInfo[i].label[j];
+                    colIdx[rowPtr[irow]+j] = groupInfo[i].label[j];
                 }
+                irow++;
             }
         }
-        rowPtr = tmpRowPtr;
-        colIdx = tmpColIdx;
     }
 
     __syncthreads();
