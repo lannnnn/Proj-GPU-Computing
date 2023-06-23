@@ -54,10 +54,11 @@ void CSR::print(){
     }
     std::cout << std::endl;
 
-    std::cout << "NZVALUE:" << std::endl;
-    for (int i = 0; i < nnz; i++) {
-        std::cout << values[i] << " ";
-    }
-    std::cout << std::endl;
+    // just ignore value for now
+    // std::cout << "NZVALUE:" << std::endl;
+    // for (int i = 0; i < nnz; i++) {
+    //     std::cout << values[i] << " ";
+    // }
+    // std::cout << std::endl;
 }
 

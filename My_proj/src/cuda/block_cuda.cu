@@ -27,8 +27,11 @@ int main() {
         printf("Detected %d CUDA Capable device(s)\n", deviceCount);
     }
 
-    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/494_bus.mtx";
-    float tau = 0.6;
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/494_bus.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/1138_bus.mtx";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/mesh3em5.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/freeFlyingRobot_4.mtx";
+    float tau = 0.8;
 
     // method allow inordered input data
     COO coo = readMTXFileWeighted(filename);
@@ -44,7 +47,7 @@ int main() {
     // free the matrix, use csr
     coo.row_message.clear();
     // print_vec(label);
-    csr.print();
+    // csr.print();
     // print_map(rankMap)
  
     // device memory allocation
@@ -63,6 +66,7 @@ int main() {
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    // csr.print();
 
     // groupList initialized as 0..n
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
@@ -85,63 +89,24 @@ int main() {
 
     dim3 block_size(BLK_SIZE, 1, 1);
     dim3 grid_size(grd_size, 1, 1);
-    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, d_groupSize, csr.nnz);
+    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, d_groupSize, csr.nnz, grd_size*BLK_SIZE);
     // test<<< grid_size, block_size>>>(d_groupList, resultList);
     // copy data back
-    CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
+    // CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
     CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
     //tmp here
     CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
 
     std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
     fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    // print_pointer(h_groupList, h_groupSize[0]+1);
+    // print_pointer(h_resultList, csr.rows);
     // print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 
-    //new_csr.print();
-    std::cout << "h_groupSize = " << h_groupSize[0] << std::endl;
-    std::cout << "original density" << csr.calculateBlockDensity(4, 4) << std::endl;
-    std::cout << "new density" << new_csr.calculateBlockDensity(4, 4) << std::endl;
-
-    // updated message for next iter
-    // CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
-    // CHECK( cudaMemcpy(h_rowPtr, d_rowPtr, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
-    // CHECK( cudaMemcpy(h_colIdx, d_colIdx, h_rowPtr[h_groupSize[0]] * sizeof(int), cudaMemcpyDeviceToHost));
-    // print_pointer(h_rowPtr, h_groupSize[0]+1);
-    // print_pointer(h_colIdx, h_rowPtr[h_groupSize[0]]);
-
-    // CHECK( cudaMemcpy(d_colIdx, h_colIdx, h_rowPtr[h_groupSize[0]] * sizeof(int), cudaMemcpyHostToDevice));
-    // CHECK( cudaMemcpy(d_rowPtr, h_rowPtr, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyHostToDevice));
-    // CHECK( cudaMemcpy(d_groupList, h_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyHostToDevice));
-    // CHECK( cudaMemcpy(d_resultList, h_resultList, csr.rows * sizeof(int), cudaMemcpyHostToDevice));
-    // CHECK( cudaMemcpy(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice));
-
-    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, d_groupSize, csr.nnz);
-    // test<<< grid_size, block_size>>>(d_groupList, resultList);
-    // copy data back
-    CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
-    CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
-    CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
-
-    // clear the memory
-    CHECK( cudaFree(d_rowPtr));
-    CHECK( cudaFree(d_colIdx));
-    CHECK( cudaFree(d_groupList));
-    CHECK( cudaFree(d_groupInfo));
-    CHECK( cudaFree(d_resultList));
-
-    fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    //print_pointer(h_groupList, h_groupSize[0]+1);
-    // print_vec(fine_group);
-    CSR new_csr1(csr.rows, csr.cols, csr.nnz);
-    reordering(csr, new_csr1, fine_group);
-
-    //new_csr.print();
-    std::cout << "h_groupSize = " << h_groupSize[0] << std::endl;
-    std::cout << "original density" << new_csr.calculateBlockDensity(4, 4) << std::endl;
-    std::cout << "new density" << new_csr1.calculateBlockDensity(4, 4) << std::endl;
+    // new_csr.print();
+    std::cout << "original density" << csr.calculateBlockDensity(8, 8) << std::endl;
+    std::cout << "new density" << new_csr.calculateBlockDensity(8, 8) << std::endl;
 
     return 0;
 }

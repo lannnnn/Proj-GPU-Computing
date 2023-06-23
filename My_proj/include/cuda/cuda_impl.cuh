@@ -19,8 +19,9 @@ typedef struct{
     int* label; // initialized by size of ncol?
 } GroupInfo;
 
-__device__ int change = 1; // global value to check if clustering should finish
-
+// __device__ int change; // global value to check if clustering should finish
+__device__ volatile int g_mutex;
+__device__ volatile int o_mutex;
 //GroupInfo *h_groupInfo;
 //GroupInfo *d_groupInfo;
 //cudaGetSymbolAddress((void **)&d_groupInfo, "groupInfo");
@@ -28,7 +29,7 @@ __device__ int change = 1; // global value to check if clustering should finish
 //Testa<<<1,1>>>();
 //cudaMemcpy(&h_groupInfo, d_groupInfo, nrows*sizeof(GroupInfo), cudaMemcpyDeviceToHost);
 __global__ void test(int* groupList, int* resultList);
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz);
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz, int goalVal);
 
 #define CHECK(call)                                   \
 do                                                    \

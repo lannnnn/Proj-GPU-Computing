@@ -13,3 +13,15 @@ Usage:
         the target named block_cuda
 
 To run the code in cluster, referring to the script 'slurm.sh'. This script can be directly use in MARZOLA
+
+------------------------------------------------------------------------------------------------------------------
+
+Updated 24/06 
+If do not make usage of the block boundary message, the result of reordering may not give benefits for different block size.
+Example: we have
+ line1  1 0 0 0 1 0 0 0
+ line2  0 0 0 0 1 0 0 0
+ line3  0 0 0 0 0 1 1 1
+When considering the block size = (4,4), according to Jaccard distance, line2 will be groupped with line1. But obviously, it will perform worse, but should be groupped with line3.
+Plan to make usage of the block boundary message.... 
+Idea: instead of using a whole line message to calculate the Jaccard distance, using a "mask" which will present the block boundary message

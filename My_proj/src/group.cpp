@@ -115,14 +115,19 @@ void reordering(CSR &omatrix, CSR &nmatrix, std::vector<std::vector<int>> &fine_
     int targetRow = 0;
     int rank = 0;
     int currentRow = 0;
+    nmatrix.rowPtr[0] = 0;
+    if(fine_group[0].size() != omatrix.rows) {
+        printf("ERROR: REFERRING REORDERING ROW NUMBER NOT MATCH\n");
+        return;
+    }
     for(int i=0; i<fine_group.size(); i++) {
         for(int j=0; j<fine_group[i].size(); j++) {
             targetRow = fine_group[i][j];
             rank = omatrix.rowPtr[targetRow+1] - omatrix.rowPtr[targetRow];
-            nmatrix.rowPtr[currentRow+1] =  nmatrix.rowPtr[currentRow] + rank;
+            nmatrix.rowPtr[currentRow+1] = nmatrix.rowPtr[currentRow] + rank;
             for(int k=0; k < rank; k++) {
                 nmatrix.colIdx.push_back(omatrix.colIdx[omatrix.rowPtr[targetRow]+k]); 
-                nmatrix.values.push_back(omatrix.values[omatrix.rowPtr[targetRow]+k]);
+                // nmatrix.values.push_back(omatrix.values[omatrix.rowPtr[targetRow]+k]); //just ignore value for now
             }
             currentRow++;
         }

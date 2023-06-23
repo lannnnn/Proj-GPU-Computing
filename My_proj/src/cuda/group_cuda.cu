@@ -104,15 +104,17 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     //printf("refrow.row[j] = %d\n", tmpRow[size-1]);
 }
 
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz) {
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz, int goalVal) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int group_thread = 0;
     // take (rows_per_thread) rows for one thread
-    int baserow = idx * rows_per_thread;
     int tarrow, refrow;
     int gap=0;
     cudaError_t error; 
+    int mutaxVal = goalVal;
 
+    int groups = rows_per_thread;
+    int change = 1;
     // build the groupInfo
     if(idx < groupSize[0]) {
         groupInfo[idx].alive = 1;
@@ -132,70 +134,93 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
         } 
     }
 
-    __syncthreads();
+    atomicAdd((int*) &g_mutex, 1);
+    while (g_mutex != mutaxVal) {}
+    mutaxVal += goalVal;
 
-    if(idx%rows_per_thread==0 && idx < groupSize[0]) {
-        if((groupSize[0] - idx) >= rows_per_thread)
-            group_thread = rows_per_thread;
-        else
-            group_thread = groupSize[0] - idx;
-    }
+    // for(int n=0; n<3; n++) {
+    while(change) { // loop till only one thread have group_thread
+        if(idx%groups==0 && idx < groupSize[0]) {
+            if((groupSize[0] - idx) >= groups)
+                group_thread = groups;
+            else
+                group_thread = groupSize[0] - idx;
+        }
 
-    // compare between each groups
-    if(group_thread > 1) {
-        for(int i=0; i<group_thread; i++) {
-            tarrow = idx+i; // define the group used as base
-            if(tarrow == -1) continue; 
-            for(int j=i+1; j<group_thread; j++) {
-                refrow = idx+j;   // define the group which should be compared for
-                if(refrow == -1) continue; 
-                // grouping
-                // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", groupInfo[tarrow].label == NULL, groupInfo[tarrow].rank);
-                // printf("refroe.label == NULL? %d, refroe.rank = %d\n", groupInfo[refrow].label == NULL, groupInfo[refrow].rank);
-                if(HammingDistance(groupInfo[tarrow], groupInfo[refrow]) < tau) {
-                    combineGroup(groupInfo[tarrow], groupInfo[refrow]);
-                    // printf("distance = %f\n", HammingDistance(groupInfo[tarrow], groupInfo[refrow]));
+        // compare between each groups
+        if(group_thread > 1) {
+            for(int i=0; i<group_thread; i++) {
+                tarrow = idx+i; // define the group used as base
+                if(groupInfo[tarrow].alive==0) continue; 
+                for(int j=i+1; j<group_thread; j++) {
+                    refrow = idx+j;   // define the group which should be compared for
+                    if(groupInfo[refrow].alive==0) continue; 
+                    // grouping
+                    // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", groupInfo[tarrow].label == NULL, groupInfo[tarrow].rank);
+                    // printf("refroe.label == NULL? %d, refroe.rank = %d\n", groupInfo[refrow].label == NULL, groupInfo[refrow].rank);
+                    if(HammingDistance(groupInfo[tarrow], groupInfo[refrow]) < tau) {
+                        combineGroup(groupInfo[tarrow], groupInfo[refrow]);
+                        // printf("distance = %f\n", HammingDistance(groupInfo[tarrow], groupInfo[refrow]));
+                        // j=i;    // re-calculate the distance since the tarrow is changed
+                    }
                 }
             }
         }
+        
+        //if(groups >= groupSize[0]) change = 0;
+        groups = groups*rows_per_thread;
+        if(groups >= groupSize[0]) change = 0;
+        
+        atomicAdd((int*) &g_mutex, 1);
+        while (g_mutex != mutaxVal) {}
+        mutaxVal +=goalVal;
+        // printf("threadIdx = %d, groups = %d, change = %d\n", idx, groups, change);
     }
-
-    __syncthreads();
 
     // after group, change the groupList in the thread 0
     if(idx == 0) {
         groupList[0] = 0;
         gap = 0; // initialize the gap to 0
         for(int i=0; i<groupSize[0]; i++) {
-            if(groupInfo[i].alive) {
+            if(groupInfo[i].alive == 1) {
                 groupList[gap+1] = groupList[gap] + groupInfo[i].size;
+                // printf("%d ", groupList[gap+1]);
                 for(int j=0; j<groupInfo[i].size; j++) {
                     resultList[groupList[gap]+j] = groupInfo[i].rows[j];
+                    // printf("%d %d\n",groupList[gap]+j, resultList[groupList[gap]+j]);
                 }
                 gap ++;
             }
         }
-        if(gap < groupSize[0])  {
-            change = 1; // if any of the group changed, keep changing
-            groupSize[0] = gap;
-        }
-    }
-    // update the csr info in another block(groupInfo read only)
-    if(idx == 32) {
-        int irow =0;
-        rowPtr[0] = 0;
-        for(int i=0; i<nnz; i++) {
-            if(groupInfo[i].alive) {
-                rowPtr[irow+1] = rowPtr[irow] + groupInfo[i].rank;
-                for(int j=0; j<groupInfo[i].rank; j++) {
-                    colIdx[rowPtr[irow]+j] = groupInfo[i].label[j];
-                }
-                irow++;
-            }
-        }
+        // printf("\n");
+        // printf("groupList : ");
+        // for(int i=0; i<gap+1; i++) {
+        //     printf("%d ", groupList[i]);
+        // }
+        // printf("\n");
+        // printf("resultList : ");
+        // for(int i=0; i<groupList[gap]; i++) {
+        //     printf("%d ", resultList[i]);
+        // }
+        // printf("\n");
     }
 
-    __syncthreads();
-    // wait for groupList change
     return;
+
+    // // update the csr info in another block(groupInfo read only)
+    // if(idx == 32) {
+    //     int irow =0;
+    //     rowPtr[0] = 0;
+    //     for(int i=0; i<nnz; i++) {
+    //         if(groupInfo[i].alive) {
+    //             rowPtr[irow+1] = rowPtr[irow] + groupInfo[i].rank;
+    //             for(int j=0; j<groupInfo[i].rank; j++) {
+    //                 colIdx[rowPtr[irow]+j] = groupInfo[i].label[j];
+    //             }
+    //             irow++;
+    //         }
+    //     }
+    // }
+    // // wait for groupList change
+    // return;
 }
