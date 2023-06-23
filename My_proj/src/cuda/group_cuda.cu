@@ -42,6 +42,10 @@ __device__ double HammingDistance(GroupInfo &tarrow, GroupInfo &refrow) {
 }
 
 __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
+    if(refrow.size == 0) {
+        refrow.alive = 0;
+        return;
+    }
     int size = tarrow.size + refrow.size;
     int* tempLabel = (int*)malloc((tarrow.rank+refrow.rank)*sizeof(int));
     int* tmpRow = (int*)malloc((size)*sizeof(int));
@@ -112,18 +116,16 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
     // build the groupInfo
     if(idx < groupSize[0]) {
         groupInfo[idx].alive = 1;
-        groupInfo[idx].size = 1;
-        //group row info -> combine the last resultList according to groupInfo *********************
-        groupInfo[idx].rows=(int*)malloc(sizeof(int));
-        groupInfo[idx].rows[0] = idx;
+        //group row info -> combine the last resultList according to groupInfo
+        groupInfo[idx].size = groupList[idx+1]-groupList[idx];
+        groupInfo[idx].rows=(int*)malloc(sizeof(int)*groupInfo[idx].size);
+        for(int i=0; i<groupInfo[idx].size; i++) {
+            groupInfo[idx].rows[i] = resultList[groupList[idx]+i];
+        }
         //cudaMalloc((int**)&groupInfo[idx].label, groupInfo[idx].rank*sizeof(int));
         groupInfo[idx].rank = rowPtr[idx+1] - rowPtr[idx];
         if(groupInfo[idx].rank > 0) {
             groupInfo[idx].label = (int*)malloc(groupInfo[idx].rank * sizeof(int));
-            if(groupInfo[idx].label == NULL) {
-                printf("label allocation error");
-                return;
-            }
             for(int j=0; j<groupInfo[idx].rank; j++) {
                 groupInfo[idx].label[j] = colIdx[rowPtr[idx]+j];
             }
@@ -163,13 +165,12 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
     // after group, change the groupList in the thread 0
     if(idx == 0) {
         groupList[0] = 0;
-        int irow =0;
         gap = 0; // initialize the gap to 0
         for(int i=0; i<groupSize[0]; i++) {
             if(groupInfo[i].alive) {
-                groupList[i+1] = groupList[i] + groupInfo[i].size;
+                groupList[gap+1] = groupList[gap] + groupInfo[i].size;
                 for(int j=0; j<groupInfo[i].size; j++) {
-                    resultList[groupList[i]+j] = groupInfo[i].rows[j];
+                    resultList[groupList[gap]+j] = groupInfo[i].rows[j];
                 }
                 gap ++;
             }
@@ -181,9 +182,22 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
     }
     // update the csr info in another warp(groupInfo read only)
     if(idx == 32) {
-
+        int irow =0;
+        int* tmpRowPtr=(int*)malloc(nnz * sizeof(int));
+        int* tmpColIdx=(int*)malloc(nnz * sizeof(int));
+        for(int i=0; i<nnz; i++) {
+            if(groupInfo[i].alive) {
+                tmpRowPtr[idx+1] = tmpRowPtr[idx] + groupInfo[i].rank;
+                for(int j=0; j<groupInfo[i].rank; j++) {
+                    tmpColIdx[tmpRowPtr[idx]+j] = groupInfo[i].label[j];
+                }
+            }
+        }
+        rowPtr = tmpRowPtr;
+        colIdx = tmpColIdx;
     }
-    // wait for groupList change
+
     __syncthreads();
+    // wait for groupList change
     return;
 }

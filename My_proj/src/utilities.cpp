@@ -83,6 +83,13 @@ COO readMTXFileUnweighted(const std::string& filename) {
     return coo;
 }
 
+void print_pointer(int* p, int size) {
+    for(int i=0; i<size; i++) {
+        std::cout << p[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 void print_matrix(COO coo, int block_rows) {
     if (coo.rows) {
         // Print the matrix into MATRICES 
