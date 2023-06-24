@@ -5,16 +5,22 @@
 #include "utilities.h"
 
 int main() {
-    std::string filename = "../data/weighted/freeFlyingRobot_4.mtx";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/494_bus.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/1138_bus.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/mesh3em5.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/freeFlyingRobot_4.mtx";
+
     // int label_cols = 64;
     // int block_rows = 64;
     // int group_number = 1;   // should have better performance if same with thread number
+    int block_cols = 3;
 
-    float fine_tau = 0.9;
-    
+    float fine_tau = 0.8;
+    // printf("ready to read \n");
     // method allow inordered input data
     COO coo = readMTXFileWeighted(filename);
-    // print_matrix(matrix, block_rows); //print matrix message
+    // print_matrix(coo, 1); //print matrix message
 
     //int labelSize = (matrix.cols-1) / label_cols + 1;
 
@@ -38,36 +44,24 @@ int main() {
     // give little more space for blocks in each thread which can not be totally filled
     std::vector<std::vector<int>> fine_group;
 
-    // init the group by rank
-    /*  reason: many dynamic real-world graphs,
-        such as social networks, follow a skewed distribution of vertex
-        degrees, where there are a few high-degree vertices and many
-        low-degree vertices. */
-        
-    std::multimap<int, int>::iterator itr = rankMap.begin();
-    coarse_group.push_back(itr->second);
-    rankMap.erase(itr++); 
-
-    // adding a group recorder? or just record by add -1?
-    // if(!coarse_grouping(coarse_group, matrix, rankMap, group_number, coarse_group_rows)) {
-    //     std::cout << "Failed in coarse graind grouping... " << std::endl;
-    //     return -1;
-    // }
-
-    //tmp fine group test use, all as one group
-    for (auto itr = rankMap.begin(); itr != rankMap.end(); itr++) { 
-        coarse_group.push_back(itr->second);
-        rankMap.erase(itr++); 
+    for (int i=0; i<csr.rows; i++) { 
+        coarse_group.push_back(i);
     }
+
+    // print_pointer(&coarse_group[0], coarse_group.size());
 
     fine_grouping(coarse_group, csr, fine_group, fine_tau);
 
-    //print_vec(fine_group);
+    print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
     //new_csr.print();
-    std::cout << "original density" << csr.calculateBlockDensity(64, 64) << std::endl;
-    std::cout << "new density" << new_csr.calculateBlockDensity(64, 64) << std::endl;
+    std::cout << "using matrix file: " << filename << std::endl;
+    std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
+    std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
+    std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    std::cout << "GPU calculation time: " << std::endl;
 
     return 0;
 }

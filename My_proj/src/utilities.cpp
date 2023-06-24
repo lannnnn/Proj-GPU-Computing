@@ -24,15 +24,11 @@ COO readMTXFileWeighted(const std::string& filename) {
     // Read matrix size and nnz
     std::istringstream iss(line);
     iss >> rows >> cols >> nnz;
-
     COO coo(rows, cols, nnz);
     while (std::getline(fin, line)) {
+        // std::cout << line << std::endl;
         std::istringstream iss(line);
         iss >> row >> col >> value;
-
-        // Adjust for 1-based indexing in MTX format
-        row--;
-        col--;
 
         coo.row_message[row].nzRowCount++;
         coo.row_message[row].nzValue[col] = value;

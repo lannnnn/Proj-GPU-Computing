@@ -9,7 +9,7 @@
 
 using namespace cooperative_groups; 
 
-#define rows_per_thread 4
+#define rows_per_thread 8
 
 typedef struct{
     int alive;
@@ -29,7 +29,8 @@ __device__ volatile int o_mutex;
 //Testa<<<1,1>>>();
 //cudaMemcpy(&h_groupInfo, d_groupInfo, nrows*sizeof(GroupInfo), cudaMemcpyDeviceToHost);
 __global__ void test(int* groupList, int* resultList);
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz, int goalVal);
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
+                                    int* resultList, int* groupSize, int nnz, int goalVal, int block_cols);
 
 #define CHECK(call)                                   \
 do                                                    \

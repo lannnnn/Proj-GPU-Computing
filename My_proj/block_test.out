@@ -1,3 +1,8 @@
 Detected 1 CUDA Capable device(s)
-original density0.0299571
-new density0.0306036
+Reordered row rank: 0 5 1 3 2 4 6 7 8 
+using matrix file: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el
+matrix info: nrows=9, ncols=9, nnz=14
+checking for using block size: (3,3)
+original density: 0.155556
+new density: 0.155556
+GPU calculation time: 

@@ -5,6 +5,9 @@ double HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx
     int cols = 0;
     int refIdx = 0;
 
+    if(baseColIdx.size() == 0 && refColIdx.size() == 0) return 0;
+    if(baseColIdx.size() == 0 || refColIdx.size() == 0) return 1; 
+
     for (int i = 0; i < baseColIdx.size();) {
         if(baseColIdx[i] == refColIdx[refIdx]) {
             i++;
@@ -52,11 +55,12 @@ int coarse_grouping(std::vector<std::vector<int>> coarse_group, CSR matrix,
 void fine_grouping(std::vector<int> &coarse_group, CSR &matrix, 
                         std::vector<std::vector<int>> &fine_group, float tau) {
     int baseRow, targetRow;
+    int size;
     std::vector<int> baseColIdx;
     std::vector<int> refColIdx;
     std::vector<int> currentGroup;
     while(!coarse_group.empty()) {
-        int size = coarse_group.size();
+        size = coarse_group.size();
         // if we have little rows left, group together anyway?
         if(size < 2) {
             for(int cnt = 0; cnt < size; cnt++) 
@@ -76,10 +80,10 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
         }
 
         // iterate all the rows
-        for(int cnt = 0; cnt < size; cnt++) {
+        for(int cnt = 0; cnt < size-1; cnt++) {
             targetRow = coarse_group[0];
             coarse_group.erase(coarse_group.begin());
-                
+
             // build the referring row label
             refColIdx.clear();
             for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
@@ -116,10 +120,7 @@ void reordering(CSR &omatrix, CSR &nmatrix, std::vector<std::vector<int>> &fine_
     int rank = 0;
     int currentRow = 0;
     nmatrix.rowPtr[0] = 0;
-    if(fine_group[0].size() != omatrix.rows) {
-        printf("ERROR: REFERRING REORDERING ROW NUMBER NOT MATCH\n");
-        return;
-    }
+    nmatrix.colIdx.clear();
     for(int i=0; i<fine_group.size(); i++) {
         for(int j=0; j<fine_group[i].size(); j++) {
             targetRow = fine_group[i][j];

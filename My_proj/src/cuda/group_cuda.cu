@@ -104,7 +104,8 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     //printf("refrow.row[j] = %d\n", tmpRow[size-1]);
 }
 
-__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, int* resultList, int* groupSize, int nnz, int goalVal) {
+__global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
+                            int* resultList, int* groupSize, int nnz, int goalVal, int block_cols) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int group_thread = 0;
     // take (rows_per_thread) rows for one thread
@@ -115,6 +116,7 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
 
     int groups = rows_per_thread;
     int change = 1;
+    int realRank = 0;
     // build the groupInfo
     if(idx < groupSize[0]) {
         groupInfo[idx].alive = 1;
@@ -129,9 +131,13 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
         if(groupInfo[idx].rank > 0) {
             groupInfo[idx].label = (int*)malloc(groupInfo[idx].rank * sizeof(int));
             for(int j=0; j<groupInfo[idx].rank; j++) {
-                groupInfo[idx].label[j] = colIdx[rowPtr[idx]+j];
+                if(realRank ==0 || (colIdx[rowPtr[idx]+j] / block_cols) != groupInfo[idx].label[realRank]-1) {
+                    groupInfo[idx].label[realRank] = colIdx[rowPtr[idx]+j]/ block_cols;
+                    realRank ++;
+                }
             }
         } 
+        groupInfo[idx].rank = realRank;
     }
 
     atomicAdd((int*) &g_mutex, 1);
@@ -167,9 +173,9 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
             }
         }
         
-        //if(groups >= groupSize[0]) change = 0;
-        groups = groups*rows_per_thread;
         if(groups >= groupSize[0]) change = 0;
+        groups = groups* 4;
+        // if(groups >= groupSize[0]) change = 0;
         
         atomicAdd((int*) &g_mutex, 1);
         while (g_mutex != mutaxVal) {}
@@ -187,7 +193,6 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
                 // printf("%d ", groupList[gap+1]);
                 for(int j=0; j<groupInfo[i].size; j++) {
                     resultList[groupList[gap]+j] = groupInfo[i].rows[j];
-                    // printf("%d %d\n",groupList[gap]+j, resultList[groupList[gap]+j]);
                 }
                 gap ++;
             }
