@@ -5,32 +5,32 @@
 #include "utilities.h"
 
 int main() {
-    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/494_bus.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/1138_bus.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/mesh3em5.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/freeFlyingRobot_4.mtx";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/0_mycielskian13.el";
 
     // int label_cols = 64;
     // int block_rows = 64;
     // int group_number = 1;   // should have better performance if same with thread number
     int block_cols = 3;
 
-    float fine_tau = 0.8;
+    float fine_tau = 0.6;
     // printf("ready to read \n");
     // method allow inordered input data
-    COO coo = readMTXFileWeighted(filename);
+    // COO coo = readMTXFileWeighted(filename);
+    // COO coo = readELFileWeighted(filename);
+    COO coo = readELFileUnweighted(filename);
     // print_matrix(coo, 1); //print matrix message
 
     //int labelSize = (matrix.cols-1) / label_cols + 1;
 
     // init label list for distance calculation
     std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
-    std::multimap<int, int, std::greater<int>> rankMap;
+    // std::multimap<int, int, std::greater<int>> rankMap;
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
-    cooToCsr(coo, csr, rankMap);
+    cooToCsr(coo, csr);
     // free the matrix, use csr
     coo.row_message.clear();
     // print_vec(label);

@@ -31,9 +31,18 @@ double CSR::calculateBlockDensity(int block_rows, int block_cols) {
     for(int i = 0; i < rows; i++) {
         for(int j=0; j< (rowPtr[i+1]-rowPtr[i]); j++) {
             blocks.push_back((i / block_rows) * totBlockCols + colIdx[rowPtr[i]+j]/block_cols);
+            // std::cout << "(i / block_rows)= " << (i / block_rows) << std::endl;
+            // std::cout << "i = " << i << " blockid = " << (i / block_rows) * totBlockCols + colIdx[rowPtr[i]+j]/block_cols << std::endl;
+            // std::cout << "totBlockCols = " << totBlockCols << std::endl;
+            // std::cout << "colIdx[rowPtr[i]+j]/block_cols = "<<  colIdx[rowPtr[i]+j]/block_cols << std::endl;
         }
     }
+    std::sort(blocks.begin(), blocks.end());
     blocks.erase(std::unique(blocks.begin(), blocks.end()), blocks.end());
+    // for(int i=0; i< blocks.size(); i++) {
+    //     std::cout << blocks[i] << " ";
+    // }
+    // std::cout << std::endl;
     return (double)nnz / (double)(blocks.size() * block_rows * block_cols);
 }
 

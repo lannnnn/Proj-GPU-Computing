@@ -10,7 +10,7 @@ int main() {
 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
-    int block_cols = 3;
+    int block_cols = 8;
 
     if (error_id != cudaSuccess) {
         printf("cudaGetDeviceCount returned %d\n-> %s\n",
@@ -28,24 +28,21 @@ int main() {
         printf("Detected %d CUDA Capable device(s)\n", deviceCount);
     }
 
-    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/494_bus.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/1138_bus.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/mesh3em5.mtx";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/freeFlyingRobot_4.mtx";
-    float tau = 0.3;
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/0_mycielskian13.el";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
+
+    float tau = 0.6;
     // method allow inordered input data
 
-    COO coo = readMTXFileWeighted(filename);
+    // COO coo = readELFileWeighted(filename);
+    COO coo = readELFileUnweighted(filename);
+    // COO coo = readMTXFileWeighted(filename);
     // print_matrix(coo, 1); //print matrix message
-
-    // init label list for distance calculation
-    std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
-    std::multimap<int, int, std::greater<int>> rankMap;
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
-    cooToCsr(coo, csr, rankMap);
+    cooToCsr(coo, csr);
     // free the matrix, use csr
     coo.row_message.clear();
     // print_vec(label);

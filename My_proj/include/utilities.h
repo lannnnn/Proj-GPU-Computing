@@ -11,7 +11,10 @@
 COO readMTXFileWeighted(const std::string& filename);
 COO readMTXFileUnweighted(const std::string& filename);
 
-int cooToCsr(COO &coo, CSR &csr, std::multimap<int, int, std::greater<int>> &rankMap);
+COO readELFileWeighted(const std::string& filename);
+COO readELFileUnweighted(const std::string& filename);
+
+int cooToCsr(COO &coo, CSR &csr);
 
 void print_matrix(COO coo, int block_rows);
 void print_pointer(int* p, int size);
