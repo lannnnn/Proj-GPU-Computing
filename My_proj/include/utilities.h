@@ -8,7 +8,7 @@
 #include "coo.h"
 #include "group.h"
 
-void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau);
+void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print);
 
 COO readMTXFileWeighted(const std::string& filename);
 COO readMTXFileUnweighted(const std::string& filename);

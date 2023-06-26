@@ -17,12 +17,6 @@ __device__ double HammingDistance(GroupInfo &tarrow, GroupInfo &refrow) {
     int i = 0;
     int j = 0;
 
-    // printf("tarrow.rank = %d\n", tarrow.rank);
-    // printf("refrow.rank = %d\n", refrow.rank);
-    // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", tarrow.label == NULL, tarrow.rank);
-    // if(tarrow.label != NULL) printf("tarrow.label[0] = %d", tarrow.label[0]);
-    //printf("refrow.label[j] = %d, rank = %d\n", refrow.label[0], refrow.rank);
-
     while(i<tarrow.rank && j<refrow.rank) {
         if(tarrow.label[i] == refrow.label[j]) {
             cols --;
@@ -56,8 +50,6 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     
     // combine the label
     while(i<tarrow.rank && j<refrow.rank) {
-        // printf("tarrow.label[%d] = %d\n", i, tarrow.label[i]);
-        // printf("tarrow.label[%d] = %d\n", j, tarrow.label[j]);
         if(tarrow.label[i] == refrow.label[j]) {
             tempLabel[rank++] = tarrow.label[i++];
             j++;
@@ -118,14 +110,14 @@ __device__ void buildGroupInfo(int* rowPtr, int* colIdx, int* groupList, int* re
         if(groupInfo.rank > 0) {
             groupInfo.label = (int*)malloc(groupInfo.rank * sizeof(int));
             for(int j=0; j<groupInfo.rank; j++) {
-                // groupInfo.label[j] = colIdx[rowPtr[idx]+j];
-                if(realRank ==0 || (colIdx[rowPtr[idx]+j] / block_cols) != groupInfo.label[realRank]-1) {
-                    groupInfo.label[realRank] = colIdx[rowPtr[idx]+j]/ block_cols;
-                    realRank ++;
-                }
+                groupInfo.label[j] = colIdx[rowPtr[idx]+j];
+                // if(realRank ==0 || (colIdx[rowPtr[idx]+j] / block_cols) != groupInfo.label[realRank]-1) {
+                //     groupInfo.label[realRank] = colIdx[rowPtr[idx]+j]/ block_cols;
+                //     realRank ++;
+                // }
             }
         } 
-        groupInfo.rank = realRank;
+        // groupInfo.rank = realRank;
 }
 
 __device__ void findRef(int* refRow, int* groupList, GroupInfo* groupInfo, float tau, int groupSize) {
@@ -160,7 +152,7 @@ __device__ void findRef(int* refRow, int* groupList, GroupInfo* groupInfo, float
 }
 
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-                            int* resultList, int* groupSize, int nnz, int goalVal, int block_cols) {
+                            int* resultList, int* groupSize, int goalVal, int block_cols) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int group_thread = 0;
     // take (rows_per_thread) rows for one thread
@@ -234,7 +226,7 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
 }
 
 __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-                            int* resultList, int* groupSize, int* refRow, int nnz, int goalVal, int block_cols) {
+                            int* resultList, int* groupSize, int* refRow, int goalVal, int block_cols) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int tarrow;
     int gap=0;
@@ -254,7 +246,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* group
     // while still have rows not groupped
     do { 
         // find the ref rows
-        if(idx == 0) {
+        if(threadIdx.x == 0) {
             findRef(refRow, groupList, groupInfo, tau, groupSize[0]);
         }
 
@@ -287,6 +279,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* group
         while (g_mutex != mutaxVal) {}
         mutaxVal +=goalVal;
     } while(refRow[ref_size - 1]!=-1);
+
 
     return;
 }

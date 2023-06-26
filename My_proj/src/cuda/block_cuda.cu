@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
     int block_cols = 8;
+    int print = 0;
 
     if (error_id != cudaSuccess) {
         printf("cudaGetDeviceCount returned %d\n-> %s\n",
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
     // method allow inordered input data
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
@@ -94,7 +95,10 @@ int main(int argc, char* argv[]) {
     dim3 block_size(BLK_SIZE, 1, 1);
     dim3 grid_size(grd_size, 1, 1);
     gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-                                                d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
+                                                d_groupSize, grd_size*BLK_SIZE, block_cols);
+
+    std::cout << "Compute finished" << std::endl;
+
     CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
     //tmp here
     CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
@@ -109,8 +113,11 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
     fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    std::cout << "Reordered row rank:" << std::endl;
-    print_vec(fine_group);
+    if(print) {
+        std::cout << "Reordered row rank:" << std::endl;
+        print_vec(fine_group);
+    }
+
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 

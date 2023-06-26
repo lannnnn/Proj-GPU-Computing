@@ -1,22 +1,17 @@
 Detected 1 CUDA Capable device(s)
-using matrix file: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el
-using blocksize: 8
-using tau: 0.4
-Reordered row rank:
-0 
-1 2 3 
-4 
-5 6 8 9 10 
-7 11 12 19 
-13 14 
-15 
-16 
-17 18 
-20 21 22 
-23 24 25 26 
-27 
-matrix info: nrows=28, ncols=29, nnz=250
-checking for using block size: (8,8)
-original density: 0.390625
-new density: 0.390625
+case '-f' found, set file name....
+set file name: ./data/unweighted/wiki-Vote_r.el
+case '-t' found, set tau....
+set tau: 0.8
+case '-b' found, set block size....
+set block size: 16
+using matrix file: ./data/unweighted/wiki-Vote_r.el
+using blocksize: 16
+using tau: 0.8
+Calculation finished
+Data copy back..
+matrix info: nrows=8275, ncols=8298, nnz=103689
+checking for using block size: (16,16)
+original density: 0.00781333
+new density: 0.00928341
 GPU calculation time: 

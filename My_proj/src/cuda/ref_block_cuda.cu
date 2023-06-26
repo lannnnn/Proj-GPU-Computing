@@ -4,13 +4,14 @@
 #include <sstream>
 #include "cuda_impl.cuh"
 
-#define BLK_SIZE 256
+#define BLK_SIZE 1024
 
 int main(int argc, char* argv[]) {
 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
     int block_cols = 8;
+    int print = 0;
 
     if (error_id != cudaSuccess) {
         printf("cudaGetDeviceCount returned %d\n-> %s\n",
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
     float tau = 0.4;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
@@ -44,6 +45,10 @@ int main(int argc, char* argv[]) {
 
     // COO coo = readELFileWeighted(filename);
     COO coo = readELFileUnweighted(filename);
+    if(coo.rows == 0) {
+        std::cout << "not acceptable matrix file" << std::endl;
+        return;
+    }
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
@@ -70,7 +75,6 @@ int main(int argc, char* argv[]) {
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
-    // csr.print();
 
     // groupList initialized as 0..n
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
@@ -96,10 +100,27 @@ int main(int argc, char* argv[]) {
     // gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
     //                                             d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
     gpu_ref_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-                                            d_groupSize, d_refRow, csr.nnz, grd_size*BLK_SIZE, block_cols);
+                                            d_groupSize, d_refRow, grd_size*BLK_SIZE, block_cols);
+
+    std::cout << "Calculation finished" << std::endl;
 
     //tmp here
-    CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
+    CHECK( cudaMemcpy(h_groupList, d_groupList, (csr.rows+1) * sizeof(int), cudaMemcpyDeviceToHost));
+
+    std::cout << "Data copy back.." << std::endl;
+
+    std::vector<std::vector<int>> fine_group(csr.rows+1);
+    for(int i=0; i<csr.rows; i++) {
+        fine_group[h_groupList[i]].push_back(i);
+    }
+    // print_pointer(h_resultList, csr.rows);
+    if(print) {
+        std::cout << "Reordered row rank:" << std::endl;
+        print_vec(fine_group);
+    }
+    CSR new_csr(csr.rows, csr.cols, csr.nnz);
+    reordering(csr, new_csr, fine_group);
+
     // clear the cuda memory
     CHECK( cudaFree(d_rowPtr));
     CHECK( cudaFree(d_colIdx));
@@ -108,16 +129,6 @@ int main(int argc, char* argv[]) {
     CHECK( cudaFree(d_groupSize));
     CHECK( cudaFree(d_refRow));
     CHECK( cudaFree(d_groupInfo));
-
-    std::vector<std::vector<int>> fine_group(csr.rows);
-    for(int i=0; i<csr.rows; i++) {
-        fine_group[h_groupList[i]].push_back(i);
-    }
-    // print_pointer(h_resultList, csr.rows);
-    std::cout << "Reordered row rank:" << std::endl;
-    print_vec(fine_group);
-    CSR new_csr(csr.rows, csr.cols, csr.nnz);
-    reordering(csr, new_csr, fine_group);
 
     // new_csr.print();
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;

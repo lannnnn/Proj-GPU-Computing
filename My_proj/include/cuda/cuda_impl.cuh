@@ -47,8 +47,8 @@ __device__ volatile int o_mutex;
 //cudaMemcpy(&h_groupInfo, d_groupInfo, nrows*sizeof(GroupInfo), cudaMemcpyDeviceToHost);
 __global__ void test(int* groupList, int* resultList);
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-                                    int* resultList, int* groupSize, int nnz, int goalVal, int block_cols);
+                                    int* resultList, int* groupSize, int goalVal, int block_cols);
 __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-                                    int* resultList, int* groupSize, int* refRow, int nnz, int goalVal, int block_cols);
+                                    int* resultList, int* groupSize, int* refRow, int goalVal, int block_cols);
 
 #endif

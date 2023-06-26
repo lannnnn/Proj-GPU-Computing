@@ -76,6 +76,6 @@ $(BIN_DIR)/$(EXEREFCUDA) : $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/grou
 cuda : $(BIN_DIR)/$(EXECUDA)  $(BIN_DIR)/$(EXEREFCUDA)
 
 clean:
-	@$(RM) -rv $(BIN_DIR)/$(EXEBLOCK) $(BIN_DIR)/$(EXEPAR) $(BIN_DIR)/$(EXEPAR) $(OBJ_DIR) # The @ disables the echoing of the command
+	@$(RM) -rv $(BIN_DIR)/$(EXEBLOCK) $(BIN_DIR)/$(EXEPAR) $(BIN_DIR)/$(EXECUDA) $(BIN_DIR)/$(EXEREFCUDA) $(OBJ_DIR) # The @ disables the echoing of the command
 
 -include $(OBJ:.o=.d) # The dash silences errors when files don't exist (yet)

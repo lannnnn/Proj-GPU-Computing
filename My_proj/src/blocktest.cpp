@@ -15,9 +15,10 @@ int main(int argc, char* argv[]) {
     int block_cols = 8;
 
     float fine_tau = 0.8;
+    int print = 0;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &fine_tau);
+        readConfig(argc, argv, &filename, &block_cols, &fine_tau, &print);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
@@ -48,8 +49,11 @@ int main(int argc, char* argv[]) {
     }
 
     fine_grouping(coarse_group, csr, fine_group, fine_tau);
-    std::cout << "Reordered row rank:" << std::endl;
-    print_vec(fine_group);
+    if(print) {
+        std::cout << "Reordered row rank:" << std::endl;
+        print_vec(fine_group);  
+    }
+
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 

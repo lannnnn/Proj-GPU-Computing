@@ -32,7 +32,7 @@ struct COO
         nnz = 0;
     }
 
-    COO(){}
+    COO(){rows = 0;}
     COO(int rows, int cols, int nnz)
         : rows(rows), cols(cols), nnz(nnz), row_message(rows) {}
     //destructor cleans all arrays

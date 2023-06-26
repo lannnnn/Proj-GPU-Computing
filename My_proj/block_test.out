@@ -1,12 +1,12 @@
 Detected 1 CUDA Capable device(s)
-Reordered row rank:
-0 1 2 3 4 5 
-6 7 8 9 10 11 12 13 14 15 16 19 20 21 22 23 25 
-17 18 
-24 26 27 
-using matrix file: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el
-matrix info: nrows=28, ncols=29, nnz=250
+case '-f' found, set file name....
+set file name: ./data/weighted/TEST_matrix_weighted.el
+using matrix file: ./data/weighted/TEST_matrix_weighted.el
+using blocksize: 8
+using tau: 0.8
+Compute finished
+matrix info: nrows=9, ncols=9, nnz=13
 checking for using block size: (8,8)
-original density: 0.390625
-new density: 0.355114
+original density: 0.101562
+new density: 0.101562
 GPU calculation time: 
