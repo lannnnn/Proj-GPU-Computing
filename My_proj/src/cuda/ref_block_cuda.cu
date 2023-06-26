@@ -6,7 +6,7 @@
 
 #define BLK_SIZE 256
 
-int main() {
+int main(int argc, char* argv[]) {
 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
@@ -33,21 +33,23 @@ int main() {
     std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
     float tau = 0.4;
-    // method allow inordered input data
+
+    if(argc >= 2) {
+        readConfig(argc, argv, &filename, &block_cols, &tau);
+    }
+
+    std::cout << "using matrix file: " << filename << std::endl;
+    std::cout << "using blocksize: " << block_cols << std::endl;
+    std::cout << "using tau: " << tau << std::endl;
 
     // COO coo = readELFileWeighted(filename);
     COO coo = readELFileUnweighted(filename);
-    // COO coo = readMTXFileWeighted(filename);
-    // print_matrix(coo, 1); //print matrix message
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
     // free the matrix, use csr
     coo.row_message.clear();
-    // print_vec(label);
-    // csr.print();
-    // print_map(rankMap)
  
     // device memory allocation
     int* d_rowPtr;
@@ -98,22 +100,26 @@ int main() {
 
     //tmp here
     CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
+    // clear the cuda memory
+    CHECK( cudaFree(d_rowPtr));
+    CHECK( cudaFree(d_colIdx));
+    CHECK( cudaFree(d_groupList));
+    CHECK( cudaFree(d_resultList));
+    CHECK( cudaFree(d_groupSize));
+    CHECK( cudaFree(d_refRow));
+    CHECK( cudaFree(d_groupInfo));
 
     std::vector<std::vector<int>> fine_group(csr.rows);
     for(int i=0; i<csr.rows; i++) {
         fine_group[h_groupList[i]].push_back(i);
     }
     // print_pointer(h_resultList, csr.rows);
-    std::cout << "Reordered row rank:\n";
+    std::cout << "Reordered row rank:" << std::endl;
     print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 
-    // std::cout << "new_csr.rowPtr.size() = " << new_csr.rowPtr.size() << std::endl;
-    // std::cout << "new_csr.colIdx.size() = " << new_csr.colIdx.size() << std::endl;
-
     // new_csr.print();
-    std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;

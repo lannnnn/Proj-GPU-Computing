@@ -6,7 +6,7 @@
 
 #define BLK_SIZE 256
 
-int main() {
+int main(int argc, char* argv[]) {
 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
@@ -35,19 +35,22 @@ int main() {
     float tau = 0.8;
     // method allow inordered input data
 
+    if(argc >= 2) {
+        readConfig(argc, argv, &filename, &block_cols, &tau);
+    }
+
+    std::cout << "using matrix file: " << filename << std::endl;
+    std::cout << "using blocksize: " << block_cols << std::endl;
+    std::cout << "using tau: " << tau << std::endl;
+
     // COO coo = readELFileWeighted(filename);
     COO coo = readELFileUnweighted(filename);
-    // COO coo = readMTXFileWeighted(filename);
-    // print_matrix(coo, 1); //print matrix message
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
     // free the matrix, use csr
     coo.row_message.clear();
-    // print_vec(label);
-    // csr.print();
-    // print_map(rankMap)
  
     // device memory allocation
     int* d_rowPtr;
@@ -68,7 +71,6 @@ int main() {
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
-    // csr.print();
 
     // groupList initialized as 0..n
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
@@ -93,28 +95,26 @@ int main() {
     dim3 grid_size(grd_size, 1, 1);
     gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
                                                 d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
-    // gpu_ref_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-    //                                         d_groupSize, d_refRow, csr.nnz, grd_size*BLK_SIZE, block_cols);
-    // test<<< grid_size, block_size>>>(d_groupList, resultList);
-    // copy data back
-    // CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
     CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
     //tmp here
     CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
+    // clear the cuda memory
+    CHECK( cudaFree(d_rowPtr));
+    CHECK( cudaFree(d_colIdx));
+    CHECK( cudaFree(d_groupList));
+    CHECK( cudaFree(d_resultList));
+    CHECK( cudaFree(d_groupSize));
+    CHECK( cudaFree(d_refRow));
+    CHECK( cudaFree(d_groupInfo));
 
     std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
     fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
-    // print_pointer(h_resultList, csr.rows);
-    std::cout << "Reordered row rank: ";
+    std::cout << "Reordered row rank:" << std::endl;
     print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 
-    // std::cout << "new_csr.rowPtr.size() = " << new_csr.rowPtr.size() << std::endl;
-    // std::cout << "new_csr.colIdx.size() = " << new_csr.colIdx.size() << std::endl;
-
     // new_csr.print();
-    std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;

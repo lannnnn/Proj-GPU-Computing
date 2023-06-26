@@ -1,4 +1,7 @@
 Detected 1 CUDA Capable device(s)
+using matrix file: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el
+using blocksize: 8
+using tau: 0.4
 Reordered row rank:
 0 
 1 2 3 
@@ -12,7 +15,6 @@ Reordered row rank:
 20 21 22 
 23 24 25 26 
 27 
-using matrix file: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el
 matrix info: nrows=28, ncols=29, nnz=250
 checking for using block size: (8,8)
 original density: 0.390625

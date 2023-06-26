@@ -1,5 +1,59 @@
 #include "utilities.h"
 
+void helpMesg() {
+    std::cout<<"Usage parameter list:"<<std::endl;
+    std::cout<<"    -f file direct"<<std::endl;
+    std::cout<<"    -t tau"<<std::endl;
+    std::cout<<"    -b block size"<<std::endl;
+}
+
+void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau) {
+    std::string* str;
+    char* endStr;
+    for(int i = 1;i < argc; ++i){
+        switch(argv[i][1]){//确定选项类型：-h,-d,-v,-l,-o;或者其他
+            case 'f':
+                std::cout<<"case \'-f\' found, set file name...."<<std::endl;
+                if(argc <= (i+1)) {
+                    std::cout<<"no file name found, please check input...."<<std::endl;
+                    helpMesg();
+                    break;
+                }
+                endStr = std::find(argv[i+1], argv[i+1]+100, '\0');
+                (*filename).assign(argv[i+1], endStr);
+                std::cout<<"set file name: " << *filename <<std::endl;
+                i++;
+                break;
+            case 't':
+                std::cout<<"case \'-t\' found, set tau...."<<std::endl;
+                if(argc <= (i+1)) {
+                    std::cout<<"no tau value found, please check input...."<<std::endl;
+                    helpMesg();
+                    break;
+                }
+                *fine_tau = atof(argv[i+1]) ;
+                std::cout<<"set tau: " << *fine_tau <<std::endl;
+                i++;
+                break;
+            case 'b':
+                std::cout<<"case \'-b\' found, set block size...."<<std::endl;
+                if(argc <= (i+1)) {
+                    std::cout<<"no block size found, please check input...."<<std::endl;
+                    helpMesg();
+                    break;
+                }
+                *block_cols = atoi(argv[i+1]) ;
+                std::cout<<"set block size: " << *block_cols <<std::endl;
+                i++;
+                break;
+            default:
+                std::cout<<"unrecognized input, pls check the help info"<<std::endl;
+                helpMesg();
+                break;
+        }
+    }
+}
+
 COO readELFileWeighted(const std::string& filename) {
     std::ifstream fin;
     fin.open(filename,std::ios_base::in);
