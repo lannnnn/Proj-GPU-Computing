@@ -14,6 +14,7 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp)
 EXEPAR := parmetistest
 PAR := $(wildcard $(PAR_DIR)/*.cpp)
 EXECUDA := block_cuda
+EXEREFCUDA := ref_block_cuda
 
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o 
@@ -54,6 +55,10 @@ $(CUDA_OBJ_DIR)/block_cuda.o: $(CUDA_SRC_DIR)/block_cuda.cu
 	mkdir -p $(CUDA_OBJ_DIR)
 	$(NVCC) $(CUDA_CXXFLAGS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@
 
+$(CUDA_OBJ_DIR)/ref_block_cuda.o: $(CUDA_SRC_DIR)/ref_block_cuda.cu
+	mkdir -p $(CUDA_OBJ_DIR)
+	$(NVCC) $(CUDA_CXXFLAGS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@
+
 $(CUDA_OBJ_DIR)/group_cuda.o: $(CUDA_SRC_DIR)/group_cuda.cu
 	mkdir -p $(CUDA_OBJ_DIR)
 	$(NVCC) $(CUDA_CXXFLAGS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@	
@@ -61,11 +66,14 @@ $(CUDA_OBJ_DIR)/group_cuda.o: $(CUDA_SRC_DIR)/group_cuda.cu
 $(BIN_DIR)/$(EXECUDA) : $(CUDA_OBJ_DIR)/block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS)  
 	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $(CUDA_OBJ_DIR)/block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS) 
 
+$(BIN_DIR)/$(EXEREFCUDA) : $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS)  
+	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS)
+
 #-------------------------------------------------------------------------
 
 .PHONY: all clean
 
-cuda : $(BIN_DIR)/$(EXECUDA)
+cuda : $(BIN_DIR)/$(EXECUDA)  $(BIN_DIR)/$(EXEREFCUDA)
 
 clean:
 	@$(RM) -rv $(BIN_DIR)/$(EXEBLOCK) $(BIN_DIR)/$(EXEPAR) $(BIN_DIR)/$(EXEPAR) $(OBJ_DIR) # The @ disables the echoing of the command

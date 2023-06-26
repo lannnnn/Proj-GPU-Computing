@@ -104,6 +104,61 @@ __device__ void combineGroup(GroupInfo &tarrow, GroupInfo &refrow) {
     //printf("refrow.row[j] = %d\n", tmpRow[size-1]);
 }
 
+__device__ void buildGroupInfo(int* rowPtr, int* colIdx, int* groupList, int* resultList, GroupInfo &groupInfo, int idx, int block_cols) {
+        int realRank = 0;
+        groupInfo.alive = 1;
+        //group row info -> combine the last resultList according to groupInfo
+        groupInfo.size = groupList[idx+1]-groupList[idx];
+        groupInfo.rows=(int*)malloc(sizeof(int)*groupInfo.size);
+        for(int i=0; i<groupInfo.size; i++) {
+            groupInfo.rows[i] = resultList[groupList[idx]+i];
+        }
+        //cudaMalloc((int**)&groupInfo[idx].label, groupInfo[idx].rank*sizeof(int));
+        groupInfo.rank = rowPtr[idx+1] - rowPtr[idx];
+        if(groupInfo.rank > 0) {
+            groupInfo.label = (int*)malloc(groupInfo.rank * sizeof(int));
+            for(int j=0; j<groupInfo.rank; j++) {
+                // groupInfo.label[j] = colIdx[rowPtr[idx]+j];
+                if(realRank ==0 || (colIdx[rowPtr[idx]+j] / block_cols) != groupInfo.label[realRank]-1) {
+                    groupInfo.label[realRank] = colIdx[rowPtr[idx]+j]/ block_cols;
+                    realRank ++;
+                }
+            }
+        } 
+        groupInfo.rank = realRank;
+}
+
+__device__ void findRef(int* refRow, int* groupList, GroupInfo* groupInfo, float tau, int groupSize) {
+    int idx = 0;
+    int cnt = 0;
+    //clear the ref list
+    for(int i=0; i<ref_size; i++) refRow[i] = -1;
+    
+    for(int i=0; i<groupSize; i++) {
+        // if already groupped, skip
+        if(groupList[i] != -1) continue;
+        // break if the list is full
+        if(idx == ref_size) break;
+        // if is the first, just add
+        if(idx == 0) {
+            refRow[idx] = i;
+            groupList[i] = i;
+            idx++;
+            continue;
+        }
+
+        for(cnt = 0; cnt<idx; cnt++) {
+            if(HammingDistance(groupInfo[refRow[cnt]], groupInfo[i]) < tau) break;
+        }
+
+        if(cnt == idx) {
+            refRow[idx] = i;
+            groupList[i] = i;
+            idx++;
+        }
+    }
+}
+
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
                             int* resultList, int* groupSize, int nnz, int goalVal, int block_cols) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -116,28 +171,9 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
 
     int groups = rows_per_thread;
     int change = 1;
-    int realRank = 0;
     // build the groupInfo
     if(idx < groupSize[0]) {
-        groupInfo[idx].alive = 1;
-        //group row info -> combine the last resultList according to groupInfo
-        groupInfo[idx].size = groupList[idx+1]-groupList[idx];
-        groupInfo[idx].rows=(int*)malloc(sizeof(int)*groupInfo[idx].size);
-        for(int i=0; i<groupInfo[idx].size; i++) {
-            groupInfo[idx].rows[i] = resultList[groupList[idx]+i];
-        }
-        //cudaMalloc((int**)&groupInfo[idx].label, groupInfo[idx].rank*sizeof(int));
-        groupInfo[idx].rank = rowPtr[idx+1] - rowPtr[idx];
-        if(groupInfo[idx].rank > 0) {
-            groupInfo[idx].label = (int*)malloc(groupInfo[idx].rank * sizeof(int));
-            for(int j=0; j<groupInfo[idx].rank; j++) {
-                if(realRank ==0 || (colIdx[rowPtr[idx]+j] / block_cols) != groupInfo[idx].label[realRank]-1) {
-                    groupInfo[idx].label[realRank] = colIdx[rowPtr[idx]+j]/ block_cols;
-                    realRank ++;
-                }
-            }
-        } 
-        groupInfo[idx].rank = realRank;
+        buildGroupInfo(rowPtr, colIdx, groupList, resultList, groupInfo[idx], idx, block_cols);
     }
 
     atomicAdd((int*) &g_mutex, 1);
@@ -161,13 +197,8 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
                 for(int j=i+1; j<group_thread; j++) {
                     refrow = idx+j;   // define the group which should be compared for
                     if(groupInfo[refrow].alive==0) continue; 
-                    // grouping
-                    // printf("tarrow.label == NULL? %d, tarrow.rank = %d\n", groupInfo[tarrow].label == NULL, groupInfo[tarrow].rank);
-                    // printf("refroe.label == NULL? %d, refroe.rank = %d\n", groupInfo[refrow].label == NULL, groupInfo[refrow].rank);
                     if(HammingDistance(groupInfo[tarrow], groupInfo[refrow]) < tau) {
                         combineGroup(groupInfo[tarrow], groupInfo[refrow]);
-                        // printf("distance = %f\n", HammingDistance(groupInfo[tarrow], groupInfo[refrow]));
-                        // j=i;    // re-calculate the distance since the tarrow is changed
                     }
                 }
             }
@@ -197,35 +228,65 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
                 gap ++;
             }
         }
-        // printf("\n");
-        // printf("groupList : ");
-        // for(int i=0; i<gap+1; i++) {
-        //     printf("%d ", groupList[i]);
-        // }
-        // printf("\n");
-        // printf("resultList : ");
-        // for(int i=0; i<groupList[gap]; i++) {
-        //     printf("%d ", resultList[i]);
-        // }
-        // printf("\n");
     }
 
     return;
+}
 
-    // // update the csr info in another block(groupInfo read only)
-    // if(idx == 32) {
-    //     int irow =0;
-    //     rowPtr[0] = 0;
-    //     for(int i=0; i<nnz; i++) {
-    //         if(groupInfo[i].alive) {
-    //             rowPtr[irow+1] = rowPtr[irow] + groupInfo[i].rank;
-    //             for(int j=0; j<groupInfo[i].rank; j++) {
-    //                 colIdx[rowPtr[irow]+j] = groupInfo[i].label[j];
-    //             }
-    //             irow++;
-    //         }
-    //     }
-    // }
-    // // wait for groupList change
-    // return;
+__global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
+                            int* resultList, int* groupSize, int* refRow, int nnz, int goalVal, int block_cols) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tarrow;
+    int gap=0;
+    int mutaxVal = goalVal;
+    float minDist, dist;
+
+    // build the groupInfo
+    if(idx < groupSize[0]) {
+        buildGroupInfo(rowPtr, colIdx, groupList, resultList, groupInfo[idx], idx, block_cols);
+        groupList[idx] = -1; // clear the group list
+    }
+
+    atomicAdd((int*) &g_mutex, 1);
+    while (g_mutex != mutaxVal) {}
+    mutaxVal += goalVal;
+
+    // while still have rows not groupped
+    do { 
+        // find the ref rows
+        if(idx == 0) {
+            findRef(refRow, groupList, groupInfo, tau, groupSize[0]);
+        }
+
+        atomicAdd((int*) &g_mutex, 1);
+        while (g_mutex != mutaxVal) {}
+        mutaxVal += goalVal;
+
+        if(idx < groupSize[0]) {
+            minDist = tau;
+            tarrow = -1;
+            // compare between each groups
+            if(groupList[idx]==-1) {
+                for(int i=0; i<ref_size; i++) {
+                    if(refRow[i] == -1) break;
+                    dist = HammingDistance(groupInfo[refRow[i]], groupInfo[idx]);
+                    if(dist < minDist) {
+                        tarrow = refRow[i];
+                        minDist = dist;
+                    }
+                }
+            }
+
+            if(tarrow!=-1) {
+                // combineGroup(groupInfo[tarrow], groupInfo[idx]);
+                groupList[idx] = tarrow;
+            }
+            // printf("threadIdx = %d, groups = %d, change = %d\n", idx, groups, change);
+        } 
+        atomicAdd((int*) &g_mutex, 1);
+        while (g_mutex != mutaxVal) {}
+        mutaxVal +=goalVal;
+    } while(refRow[ref_size - 1]!=-1);
+
+    return;
 }

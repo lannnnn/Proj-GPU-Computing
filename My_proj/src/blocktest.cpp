@@ -12,9 +12,9 @@ int main() {
     // int label_cols = 64;
     // int block_rows = 64;
     // int group_number = 1;   // should have better performance if same with thread number
-    int block_cols = 3;
+    int block_cols = 8;
 
-    float fine_tau = 0.6;
+    float fine_tau = 0.8;
     // printf("ready to read \n");
     // method allow inordered input data
     // COO coo = readMTXFileWeighted(filename);

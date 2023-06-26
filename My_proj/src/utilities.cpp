@@ -206,7 +206,7 @@ void print_vec(std::vector<std::vector<int>> label) {
         for(int j = 0; j< label[i].size(); j++) {
             std::cout << label[i][j] << " ";
         }
-        std::cout << std::endl;
+        if(label[i].size() > 0) std::cout << std::endl;
     }
 }
 

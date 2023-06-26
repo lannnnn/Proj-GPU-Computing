@@ -28,11 +28,11 @@ int main() {
         printf("Detected %d CUDA Capable device(s)\n", deviceCount);
     }
 
-    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
     // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/0_mycielskian13.el";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
-    float tau = 0.8;
+    float tau = 0.6;
     // method allow inordered input data
 
     // COO coo = readELFileWeighted(filename);
@@ -91,21 +91,20 @@ int main() {
 
     dim3 block_size(BLK_SIZE, 1, 1);
     dim3 grid_size(grd_size, 1, 1);
-    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-                                                d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
-    // gpu_ref_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-    //                                         d_groupSize, d_refRow, csr.nnz, grd_size*BLK_SIZE, block_cols);
-    // test<<< grid_size, block_size>>>(d_groupList, resultList);
-    // copy data back
-    // CHECK( cudaMemcpy(h_groupSize, d_groupSize, sizeof(int), cudaMemcpyDeviceToHost));
-    CHECK( cudaMemcpy(h_resultList, d_resultList, csr.rows * sizeof(int), cudaMemcpyDeviceToHost));
+    // gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
+    //                                             d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
+    gpu_ref_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
+                                            d_groupSize, d_refRow, csr.nnz, grd_size*BLK_SIZE, block_cols);
+
     //tmp here
     CHECK( cudaMemcpy(h_groupList, d_groupList, (h_groupSize[0]+1) * sizeof(int), cudaMemcpyDeviceToHost));
 
-    std::vector<std::vector<int>> fine_group(1, std::vector<int>(csr.rows));
-    fine_group[0] = std::vector<int>(&h_resultList[0], &h_resultList[0] + csr.rows);
+    std::vector<std::vector<int>> fine_group(csr.rows);
+    for(int i=0; i<csr.rows; i++) {
+        fine_group[h_groupList[i]].push_back(i);
+    }
     // print_pointer(h_resultList, csr.rows);
-    std::cout << "Reordered row rank: ";
+    std::cout << "Reordered row rank:\n";
     print_vec(fine_group);
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);

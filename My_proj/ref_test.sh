@@ -6,9 +6,9 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
     
-#SBATCH --output=block_test.out     
-#SBATCH --error=block_test.err     
+#SBATCH --output=ref_block_test.out     
+#SBATCH --error=ref_block_test.err     
 
 module load cuda/12.1
 
-srun ./block_cuda
+srun ./ref_block_cuda

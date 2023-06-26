@@ -10,6 +10,23 @@
 using namespace cooperative_groups; 
 
 #define rows_per_thread 8
+#define ref_size 4
+
+#define CHECK(call)                                   \
+do                                                    \
+{                                                     \
+    const cudaError_t error_code = call;              \
+    if (error_code != cudaSuccess)                    \
+    {                                                 \
+        printf("CUDA Error:\n");                      \
+        printf("    File:       %s\n", __FILE__);     \
+        printf("    Line:       %d\n", __LINE__);     \
+        printf("    Error code: %d\n", error_code);   \
+        printf("    Error text: %s\n",                \
+            cudaGetErrorString(error_code));          \
+        exit(1);                                      \
+    }                                                 \
+} while (0)
 
 typedef struct{
     int alive;
@@ -31,20 +48,7 @@ __device__ volatile int o_mutex;
 __global__ void test(int* groupList, int* resultList);
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
                                     int* resultList, int* groupSize, int nnz, int goalVal, int block_cols);
+__global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
+                                    int* resultList, int* groupSize, int* refRow, int nnz, int goalVal, int block_cols);
 
-#define CHECK(call)                                   \
-do                                                    \
-{                                                     \
-    const cudaError_t error_code = call;              \
-    if (error_code != cudaSuccess)                    \
-    {                                                 \
-        printf("CUDA Error:\n");                      \
-        printf("    File:       %s\n", __FILE__);     \
-        printf("    Line:       %d\n", __LINE__);     \
-        printf("    Error code: %d\n", error_code);   \
-        printf("    Error text: %s\n",                \
-            cudaGetErrorString(error_code));          \
-        exit(1);                                      \
-    }                                                 \
-} while (0)
 #endif
