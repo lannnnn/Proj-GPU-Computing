@@ -32,7 +32,7 @@ int main() {
     // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/0_mycielskian13.el";
     std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
-    float tau = 0.6;
+    float tau = 0.4;
     // method allow inordered input data
 
     // COO coo = readELFileWeighted(filename);

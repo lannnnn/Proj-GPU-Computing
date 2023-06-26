@@ -10,9 +10,15 @@ Usage:
     for CPU code: in this dir run `make all`
         the target named 'blocktest' will be build in this dir
     for CUDA code: make sure have nvcc compiler. run `make cuda`
-        the target named block_cuda
+        the target named 'block_cuda' and 'ref_block_cuda'
 
-To run the code in cluster, referring to the script 'slurm.sh'. This script can be directly use in MARZOLA
+The block_cuda use the alg as:
+    We treat each group as row, so when two rows is near enough, we produce a new row and disable the original rows. Each thread will take  responsibility of some of the rows. Due to the reason that the size of label(cols message of each row), row number and group size all varies, it's not easy to realize this alg in GPU, mostly due to we will never be sure the final size of group numbers. It's never going to be a proper reduction... So when we have meet large sparse matrix with very low density, the performance will be extremely terrible.... Not make sense to parallelize
+
+The ref_block_cuda use the alg as:
+    We first choose some of the reference rows(in our case, 4 rows, defined in the cuda_impl.h) that it's far enough to each other. And each thread calculate the distance of the row they are responsible for with these reference rows. If the distance is all larger than tau, then do nothing; but if one of then smaller than tau, add the row into the group which has smallest distance. This algorithm was benefit from parallelize, however not make use of the updated group property since updating the group message is not developed, otherwise huge overhead should be involved due to synchronization issue... 
+
+To run the code in cluster, referring to the script 'ref_test.sh'. This script can be directly use in MARZOLA
 
 ------------------------------------------------------------------------------------------------------------------
 
