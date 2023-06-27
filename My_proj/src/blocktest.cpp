@@ -2,7 +2,10 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <ctime>
 #include "utilities.h"
+
+clock_t start,end;
 
 int main(int argc, char* argv[]) {
     // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
@@ -48,7 +51,12 @@ int main(int argc, char* argv[]) {
         coarse_group.push_back(i);
     }
 
+    start=clock();
     fine_grouping(coarse_group, csr, fine_group, fine_tau);
+    end=clock();
+
+    double endtime=(double)(end-start)/CLOCKS_PER_SEC;
+
     if(print) {
         std::cout << "Reordered row rank:" << std::endl;
         print_vec(fine_group);  
@@ -61,7 +69,7 @@ int main(int argc, char* argv[]) {
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    std::cout << "GPU calculation time: " << std::endl;
+    std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
 
     return 0;
 }

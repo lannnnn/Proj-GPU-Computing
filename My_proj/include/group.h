@@ -6,7 +6,7 @@
 #include <map>
 #include "csr.h"
 
-double HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx);
+float HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx);
 
 /**** THIS METHOD BENEFITS MORE FROM LARGE BLOCK COLOMN SIZE SINCE IT COMPRESS MORE THE LABEL SIZE ****/
 // coarse group according to the label message, the result will be saved in coarse_group

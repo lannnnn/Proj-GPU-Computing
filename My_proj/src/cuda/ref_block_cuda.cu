@@ -14,6 +14,14 @@ int main(int argc, char* argv[]) {
     int block_cols = 8;
     int print = 0;
 
+    cudaEvent_t startTime, endTime;
+    float elapsedTime = 0.0;
+
+    // This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
+    int numBlocksPerSm = 0;
+    // Number of threads my_kernel will be launched with
+    int numThreads = BLK_SIZE;
+
     if (error_id != cudaSuccess) {
         printf("cudaGetDeviceCount returned %d\n-> %s\n",
            static_cast<int>(error_id), cudaGetErrorString(error_id));
@@ -97,31 +105,32 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMemcpy(d_resultList, h_resultList, csr.rows * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice));
 
-    /// This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
-    int numBlocksPerSm = 0;
-    // Number of threads my_kernel will be launched with
-    int numThreads = BLK_SIZE;
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0);
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
-    // launch
     void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList, (void *)&d_groupInfo, 
                                 (void *)&d_resultList, (void *)&d_groupSize, (void *)&d_refRow};
     dim3 dimBlock(numThreads, 1, 1);
     int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
     if(totalThreads > csr.rows) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE;
     dim3 dimGrid(grdDim, 1, 1);
-    std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << std::endl;
-    std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
+    // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
+    std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << "..." << std::endl;
+
+    cudaEventCreate(&startTime);
+    cudaEventCreate(&endTime);
+    cudaEventRecord(startTime, 0);
 
     cudaLaunchCooperativeKernel((void*)gpu_ref_grouping, dimGrid, dimBlock, kernelArgs);
 
-    cudaDeviceSynchronize();
-    std::cout << "Calculation finished" << std::endl;
+    cudaEventRecord(endTime, 0);
+    cudaEventSynchronize(startTime);
+    cudaEventSynchronize(endTime);
+    cudaEventElapsedTime(&elapsedTime, startTime, endTime);
 
     CHECK( cudaMemcpy(h_groupList, d_groupList, (csr.rows) * sizeof(int), cudaMemcpyDeviceToHost));
-    print_pointer(h_groupList, csr.rows);
+    // print_pointer(h_groupList, csr.rows);
     std::vector<std::vector<int>> fine_group(csr.rows+1);
     for(int i=0; i<csr.rows; i++) {
         fine_group[h_groupList[i]].push_back(i);
@@ -144,11 +153,14 @@ int main(int argc, char* argv[]) {
     CHECK( cudaFree(d_tau));
     CHECK( cudaFree(d_groupInfo));
 
+    cudaEventDestroy(startTime);
+    cudaEventDestroy(endTime);
+
     // new_csr.print();
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    std::cout << "GPU calculation time: " << std::endl;
+    std::cout << "Group calculation time(GPU): " << elapsedTime << " ms" << std::endl;
     return 0;
 }

@@ -1,38 +1,36 @@
 #include "group.h"
 
-double HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx) {
+float HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx) {
     int dist = 0;
-    int cols = 0;
+    int cols = baseColIdx.size() + refColIdx.size();
     int refIdx = 0;
+    int baseIdx = 0;
 
-    if(baseColIdx.size() == 0 && refColIdx.size() == 0) return 0;
-    if(baseColIdx.size() == 0 || refColIdx.size() == 0) return 1; 
+    if(baseColIdx.size() == 0 && refColIdx.size() == 0) return 0.0;
+    if(baseColIdx.size() == 0 || refColIdx.size() == 0) return 1.0; 
 
-    for (int i = 0; i < baseColIdx.size();) {
-        if(baseColIdx[i] == refColIdx[refIdx]) {
-            i++;
+    while(baseIdx < baseColIdx.size() && refIdx < refColIdx.size()) {
+        if(baseColIdx[baseIdx] == refColIdx[refIdx]) {
+            baseIdx++;
             refIdx++;
-        }else if(baseColIdx[i] < refColIdx[refIdx]) {
+            cols--;
+        }else if(baseColIdx[baseIdx] < refColIdx[refIdx]) {
             dist++;
-            i++;
+            baseIdx++;
         }else{ 
             dist++;
             refIdx++;
         }
-        cols++;
-        // if ref is at end, add all the base as non-equal
-        if(refIdx >= refColIdx.size()) {
-            dist += baseColIdx.size() - i;
-            cols += baseColIdx.size() - i;
-            break;
-        }
+    }
+    // if ref is at end, add all the red as non-equal
+    if(baseIdx >= baseColIdx.size()) {
+        dist += (refColIdx.size() - refIdx - 1);
     }
     // if base is at end, add all the red as non-equal
-    if(refIdx < refColIdx.size()) {
-        dist += refColIdx.size() - refIdx;
-        cols += refColIdx.size() - refIdx;
+    if(refIdx >= refColIdx.size()) {
+        dist += (baseColIdx.size() - baseIdx - 1);
     }
-    return (double)dist / (double)cols;
+    return (float)dist / (float)cols;
 }
 
 /**** THIS METHOD BENEFITS MORE FROM LARGE BLOCK COLOMN SIZE SINCE IT COMPRESS MORE THE LABEL SIZE ****/
@@ -61,13 +59,6 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
     std::vector<int> currentGroup;
     while(!coarse_group.empty()) {
         size = coarse_group.size();
-        // if we have little rows left, group together anyway?
-        if(size < 2) {
-            for(int cnt = 0; cnt < size; cnt++) 
-                currentGroup.push_back(coarse_group[cnt]);
-            fine_group.push_back(currentGroup);
-            return;
-        }
         baseRow = coarse_group[0];
         coarse_group.erase(coarse_group.begin());
         currentGroup.push_back(baseRow);
@@ -91,27 +82,27 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
                 refColIdx.push_back(col);
             }
 
-            std::sort(baseColIdx.begin(), baseColIdx.end());
-            std::sort(refColIdx.begin(), refColIdx.end());
+            // std::sort(baseColIdx.begin(), baseColIdx.end());
+            // std::sort(refColIdx.begin(), refColIdx.end());
 
             // calculate distance
-            double dist = HammingDistance(baseColIdx, refColIdx);
+            float dist = HammingDistance(baseColIdx, refColIdx);
 
             // if(dist<tau) add, else ignore
-            if(dist <= tau) {
+            if(dist < tau) {
                 currentGroup.push_back(targetRow);
-                // calculate the new baseColIdx
-                for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
-                    col = matrix.colIdx[matrix.rowPtr[targetRow] + i];
-                    baseColIdx.erase(std::unique(baseColIdx.begin(), baseColIdx.end()), baseColIdx.end());
-                }
+                // // calculate the new baseColIdx
+                // for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
+                //     col = matrix.colIdx[matrix.rowPtr[targetRow] + i];
+                //     baseColIdx.erase(std::unique(baseColIdx.begin(), baseColIdx.end()), baseColIdx.end());
+                // }
             } else {
-            coarse_group.push_back(targetRow);
+                coarse_group.push_back(targetRow);
             }
         }
         // build the new group for rows who still inside
         fine_group.push_back(currentGroup);
-        currentGroup = {};
+        currentGroup.clear();
     }
 }
 

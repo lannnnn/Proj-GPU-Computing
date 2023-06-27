@@ -1,12 +1,10 @@
 Detected 1 CUDA Capable device(s)
-using matrix file: ./data/unweighted/twitter.el
+using matrix file: ./data/unweighted/wiki-Vote_r.el
 using blocksize: 8
 using tau: 0.6
-Start calculating with dimGrid 42, dimBlock 256
-matrix size: (rows, cols, nnz) = (444815, 465017, 833540)
-Calculation finished
-CUDA Error:
-    File:       src/cuda/ref_block_cuda.cu
-    Line:       123
-    Error code: 700
-    Error text: an illegal memory access was encountered
+Start calculating with dimGrid 33, dimBlock 256...
+matrix info: nrows=8275, ncols=8298, nnz=103689
+checking for using block size: (8,8)
+original density: 0.022288
+new density: 0.0248805
+Group calculation time(GPU): 9199.6 ms

@@ -27,8 +27,8 @@ __device__ float HammingDistance(GroupInfo &tarrow, GroupInfo &refrow) {
             dist++; j++;
         }
     }
-    if(i >= tarrow.rank) dist += (refrow.rank - j);
-    if(j >= refrow.rank) dist += (tarrow.rank - i);
+    if(i >= tarrow.rank) dist += (refrow.rank - j - 1);
+    if(j >= refrow.rank) dist += (tarrow.rank - i - 1);
 
     //printf("distance = %f\n", (double) dist / (double) cols);
 
@@ -255,6 +255,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
         }
         
 	    grid.sync();
+        // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
 
         while((idx+goalVal*loopIdx) < groupSize[0]) {
             minDist = tau[0];
@@ -264,7 +265,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
                 for(int i=0; i<ref_size; i++) {
                     if(refRow[i] == -1) continue;
                     dist = HammingDistance(groupInfo[refRow[i]], groupInfo[idx+goalVal*loopIdx]);
-                    if(dist <= minDist) {
+                    if(dist < minDist) {
                         tarrow = refRow[i];
                         minDist = dist;
                     }
@@ -276,7 +277,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
                 groupList[idx+goalVal*loopIdx] = tarrow;
             }
             loopIdx++;
-            // printf("threadIdx = %d, groups = %d, change = %d\n", idx, groups, change);
+            // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
         } 
 
     } while(refRow[ref_size-1]!=-1);

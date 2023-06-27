@@ -37,7 +37,8 @@ Idea: instead of using a whole line message to calculate the Jaccard distance, u
 
 DATASET STATUS:
 unweighted:
-social_location.el - pass
+wiki-Vote_r.el pass (nnz = 103689)
+social_location.el - too large to fit in one GPU?
 twitter.el - too large to fit in one GPU
 wiki-Vote.el - not ascending ordered..
 weighted:
