@@ -14,7 +14,6 @@ void readConfig(int argc, char** argv, std::string* filename, int* block_cols, f
     for(int i = 1;i < argc; ++i){
         switch(argv[i][1]){//确定选项类型：-h,-d,-v,-l,-o;或者其他
             case 'f':
-                std::cout<<"case \'-f\' found, set file name...."<<std::endl;
                 if(argc <= (i+1)) {
                     std::cout<<"no file name found, please check input...."<<std::endl;
                     helpMesg();
@@ -22,29 +21,24 @@ void readConfig(int argc, char** argv, std::string* filename, int* block_cols, f
                 }
                 endStr = std::find(argv[i+1], argv[i+1]+100, '\0');
                 (*filename).assign(argv[i+1], endStr);
-                std::cout<<"set file name: " << *filename <<std::endl;
                 i++;
                 break;
             case 't':
-                std::cout<<"case \'-t\' found, set tau...."<<std::endl;
                 if(argc <= (i+1)) {
                     std::cout<<"no tau value found, please check input...."<<std::endl;
                     helpMesg();
                     break;
                 }
                 *fine_tau = atof(argv[i+1]) ;
-                std::cout<<"set tau: " << *fine_tau <<std::endl;
                 i++;
                 break;
             case 'b':
-                std::cout<<"case \'-b\' found, set block size...."<<std::endl;
                 if(argc <= (i+1)) {
                     std::cout<<"no block size found, please check input...."<<std::endl;
                     helpMesg();
                     break;
                 }
                 *block_cols = atoi(argv[i+1]) ;
-                std::cout<<"set block size: " << *block_cols <<std::endl;
                 i++;
                 break;
             case 'p':

@@ -4,11 +4,12 @@
 #include <sstream>
 #include "cuda_impl.cuh"
 
-#define BLK_SIZE 1024
+#define BLK_SIZE 256
 
 int main(int argc, char* argv[]) {
 
     int deviceCount = 0;
+    int device;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
     int block_cols = 8;
     int print = 0;
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]) {
         printf("There are no available device(s) that support CUDA\n");
         return -1;
     } else {
-        cudaSetDevice(0);
+        cudaGetDevice(&device);
         printf("Detected %d CUDA Capable device(s)\n", deviceCount);
     }
 
@@ -63,6 +64,7 @@ int main(int argc, char* argv[]) {
     int* d_resultList;
     int* d_groupSize;
     int* d_refRow;
+    float* d_tau;
     GroupInfo* d_groupInfo;
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
@@ -70,11 +72,13 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMalloc((int**)&d_resultList, csr.rows * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
     CHECK( cudaMalloc((int**)&d_refRow, ref_size * sizeof(int)));
+    CHECK( cudaMalloc((float**)&d_tau, sizeof(float)));
     CHECK( cudaMemset(d_refRow, 0, ref_size * sizeof(int)));
     CHECK( cudaMalloc((GroupInfo**)&d_groupInfo, csr.rows * sizeof(GroupInfo)));
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMemcpy(d_tau, &tau, sizeof(float), cudaMemcpyHostToDevice));
 
     // groupList initialized as 0..n
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
@@ -93,22 +97,31 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMemcpy(d_resultList, h_resultList, csr.rows * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice));
 
-    int grd_size = (csr.rows+BLK_SIZE)/BLK_SIZE;
+    /// This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
+    int numBlocksPerSm = 0;
+    // Number of threads my_kernel will be launched with
+    int numThreads = BLK_SIZE;
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, device);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0);
+    int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
+    // launch
+    void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList, (void *)&d_groupInfo, 
+                                (void *)&d_resultList, (void *)&d_groupSize, (void *)&d_refRow};
+    dim3 dimBlock(numThreads, 1, 1);
+    int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
+    if(totalThreads > csr.rows) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE;
+    dim3 dimGrid(grdDim, 1, 1);
+    std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << std::endl;
+    std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
 
-    dim3 block_size(BLK_SIZE, 1, 1);
-    dim3 grid_size(grd_size, 1, 1);
-    // gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-    //                                             d_groupSize, csr.nnz, grd_size*BLK_SIZE, block_cols);
-    gpu_ref_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-                                            d_groupSize, d_refRow, grd_size*BLK_SIZE, block_cols);
+    cudaLaunchCooperativeKernel((void*)gpu_ref_grouping, dimGrid, dimBlock, kernelArgs);
 
+    cudaDeviceSynchronize();
     std::cout << "Calculation finished" << std::endl;
 
-    //tmp here
-    CHECK( cudaMemcpy(h_groupList, d_groupList, (csr.rows+1) * sizeof(int), cudaMemcpyDeviceToHost));
-
-    std::cout << "Data copy back.." << std::endl;
-
+    CHECK( cudaMemcpy(h_groupList, d_groupList, (csr.rows) * sizeof(int), cudaMemcpyDeviceToHost));
+    print_pointer(h_groupList, csr.rows);
     std::vector<std::vector<int>> fine_group(csr.rows+1);
     for(int i=0; i<csr.rows; i++) {
         fine_group[h_groupList[i]].push_back(i);
@@ -128,6 +141,7 @@ int main(int argc, char* argv[]) {
     CHECK( cudaFree(d_resultList));
     CHECK( cudaFree(d_groupSize));
     CHECK( cudaFree(d_refRow));
+    CHECK( cudaFree(d_tau));
     CHECK( cudaFree(d_groupInfo));
 
     // new_csr.print();

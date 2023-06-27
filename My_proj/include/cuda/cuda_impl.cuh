@@ -7,8 +7,6 @@
 #include <cooperative_groups.h>
 #include "../utilities.h"
 
-using namespace cooperative_groups; 
-
 #define rows_per_thread 8
 #define ref_size 4
 
@@ -48,7 +46,7 @@ __device__ volatile int o_mutex;
 __global__ void test(int* groupList, int* resultList);
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
                                     int* resultList, int* groupSize, int goalVal, int block_cols);
-__global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-                                    int* resultList, int* groupSize, int* refRow, int goalVal, int block_cols);
+__global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* groupList, GroupInfo* groupInfo, 
+                                    int* resultList, int* groupSize, int* refRow);
 
 #endif
