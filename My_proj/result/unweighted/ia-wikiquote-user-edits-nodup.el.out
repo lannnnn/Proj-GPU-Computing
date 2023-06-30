@@ -1,0 +1,13 @@
+TLE
+
+
+Detected 1 CUDA Capable device(s)
+using matrix file: ./data/unweighted/ia-wikiquote-user-edits-nodup.el
+using blocksize: 8
+using tau: 0.6
+Start calculating with dimGrid 42, dimBlock 256...
+matrix info: nrows=21608, ncols=94757, nnz=238714
+checking for using block size: (8,8)
+original density: 0.0336473
+new density: 0.0336865
+Group calculation time(GPU): 164399 ms

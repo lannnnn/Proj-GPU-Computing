@@ -1,0 +1,8 @@
+using matrix file: ./data/weighted/bcsstk18_r.el
+using blocksize: 8
+using tau: 0.6
+matrix info: nrows=11949, ncols=11949, nnz=80519
+checking for using block size: (8,8)
+original density: 0.113702
+new density: 0.0911145
+Group calculation time(CPU):168349ms

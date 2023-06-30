@@ -1,0 +1,20 @@
+using matrix file: ./data/unweighted/0_mycielskian13.el
+using blocksize: 8
+using tau: 0.6
+matrix info: nrows=6144, ncols=6143, nnz=613871
+checking for using block size: (8,8)
+original density: 0.205136
+new density: 0.135628
+Group calculation time(CPU):12745.5ms
+
+
+Detected 1 CUDA Capable device(s)
+using matrix file: ./data/unweighted/0_mycielskian13.el
+using blocksize: 8
+using tau: 0.6
+Start calculating with dimGrid 25, dimBlock 256...
+matrix info: nrows=6144, ncols=6143, nnz=613871
+checking for using block size: (8,8)
+original density: 0.205136
+new density: 0.135628
+Group calculation time(GPU): 5195.88 ms

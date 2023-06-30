@@ -1,0 +1,20 @@
+using matrix file: ./data/unweighted/wiki-Vote_r.el
+using blocksize: 8
+using tau: 0.6
+matrix info: nrows=8275, ncols=8298, nnz=103689
+checking for using block size: (8,8)
+original density: 0.022288
+new density: 0.0248805
+Group calculation time(CPU):19985.7ms
+
+
+Detected 1 CUDA Capable device(s)
+using matrix file: ./data/unweighted/wiki-Vote_r.el
+using blocksize: 8
+using tau: 0.6
+Start calculating with dimGrid 33, dimBlock 256...
+matrix info: nrows=8275, ncols=8298, nnz=103689
+checking for using block size: (8,8)
+original density: 0.022288
+new density: 0.0248805
+Group calculation time(GPU): 9087.07 ms
