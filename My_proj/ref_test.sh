@@ -13,4 +13,4 @@ module load cuda/12.1
 
 # export CUDA_LAUNCH_BLOCKING=1
 
-srun ./ref_block_cuda -f ./data/unweighted/wiki-Vote_r.el -t 0.6 -b 8
+srun ./ref_block_cuda -f ./data/weighted/bcsstk18_r.el -t 0.6 -b 8

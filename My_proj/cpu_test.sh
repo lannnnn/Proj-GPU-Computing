@@ -11,4 +11,4 @@
 
 #module load cuda/12.1
 
-srun ./blocktest -f ./data/unweighted/wiki-Vote_r.el -t 0.6 -b 8
+srun ./blocktest -f ./data/weighted/bcsstk18_r.el -t 0.6 -b 8

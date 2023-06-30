@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
 
     dim3 block_size(BLK_SIZE, 1, 1);
     dim3 grid_size(grd_size, 1, 1);
-    gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
-                                                d_groupSize, grd_size*BLK_SIZE, block_cols);
+    // gpu_grouping<<< grid_size, block_size>>>(d_rowPtr, d_colIdx, tau, d_groupList, d_groupInfo, d_resultList, 
+    //                                            d_groupSize, grd_size*BLK_SIZE, block_cols);
 
     std::cout << "Compute finished" << std::endl;
 

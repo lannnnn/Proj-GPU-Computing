@@ -1,10 +1,10 @@
 Detected 1 CUDA Capable device(s)
-using matrix file: ./data/unweighted/wiki-Vote_r.el
+using matrix file: ./data/weighted/bcsstk18_r.el
 using blocksize: 8
 using tau: 0.6
-Start calculating with dimGrid 33, dimBlock 256...
-matrix info: nrows=8275, ncols=8298, nnz=103689
+Start calculating with dimGrid 42, dimBlock 256...
+matrix info: nrows=11949, ncols=11949, nnz=80519
 checking for using block size: (8,8)
-original density: 0.022288
-new density: 0.0248805
-Group calculation time(GPU): 9199.6 ms
+original density: 0.113702
+new density: 0.0911145
+Group calculation time(GPU): 18287.8 ms

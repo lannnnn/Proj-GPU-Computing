@@ -69,20 +69,16 @@ int main(int argc, char* argv[]) {
     int* d_rowPtr;
     int* d_colIdx;
     int* d_groupList;
-    int* d_resultList;
     int* d_groupSize;
     int* d_refRow;
     float* d_tau;
-    GroupInfo* d_groupInfo;
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupList, (csr.rows+1) * sizeof(int)));
-    CHECK( cudaMalloc((int**)&d_resultList, csr.rows * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
     CHECK( cudaMalloc((int**)&d_refRow, ref_size * sizeof(int)));
     CHECK( cudaMalloc((float**)&d_tau, sizeof(float)));
     CHECK( cudaMemset(d_refRow, 0, ref_size * sizeof(int)));
-    CHECK( cudaMalloc((GroupInfo**)&d_groupInfo, csr.rows * sizeof(GroupInfo)));
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
@@ -94,29 +90,29 @@ int main(int argc, char* argv[]) {
     int* h_rowPtr = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     for(int i=0; i< csr.rows; i++) {
-        h_groupList[i] = i;
+        h_groupList[i] = -1;
         h_resultList[i] = i;
     }
-    h_groupList[csr.rows] = csr.rows;
+    h_groupList[csr.rows] = -1;
 
     int* h_groupSize = (int*)malloc(sizeof(int));
     h_groupSize[0] = csr.rows;
     CHECK( cudaMemcpy(d_groupList, h_groupList, (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
-    CHECK( cudaMemcpy(d_resultList, h_resultList, csr.rows * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice));
 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0);
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
-    void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList, (void *)&d_groupInfo, 
-                                (void *)&d_resultList, (void *)&d_groupSize, (void *)&d_refRow};
+    void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
+                                (void *)&d_groupSize, (void *)&d_refRow};
     dim3 dimBlock(numThreads, 1, 1);
     int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
     if(totalThreads > csr.rows) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE;
     dim3 dimGrid(grdDim, 1, 1);
     // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
     std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << "..." << std::endl;
+    std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
 
     cudaEventCreate(&startTime);
     cudaEventCreate(&endTime);
@@ -147,17 +143,14 @@ int main(int argc, char* argv[]) {
     CHECK( cudaFree(d_rowPtr));
     CHECK( cudaFree(d_colIdx));
     CHECK( cudaFree(d_groupList));
-    CHECK( cudaFree(d_resultList));
     CHECK( cudaFree(d_groupSize));
     CHECK( cudaFree(d_refRow));
     CHECK( cudaFree(d_tau));
-    CHECK( cudaFree(d_groupInfo));
 
     cudaEventDestroy(startTime);
     cudaEventDestroy(endTime);
 
     // new_csr.print();
-    std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
