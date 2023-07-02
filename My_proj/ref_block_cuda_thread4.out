@@ -1,0 +1,88 @@
+Detected 1 CUDA Capable device(s)
+using matrix file: ./data/weighted/1_nemeth21.el
+using blocksize: 8
+using tau: 0.6
+Start calculating with dimGrid 38, dimBlock 256...
+matrix info: nrows=9507, ncols=9507, nnz=591626
+checking for using block size: (8,8)
+original density: 0.706416
+new density: 0.695102
+Group calculation time(GPU): 2279.71 ms
+Generating '/tmp/nsys-report-e4c2.qdstrm'
+[1/8] [0%                          ] ref_block_cuda_thread4.nsys-rep[1/8] [0%                          ] ref_block_cuda_thread4.nsys-rep[1/8] [=====29%                    ] ref_block_cuda_thread4.nsys-rep[1/8] [=====31%                    ] ref_block_cuda_thread4.nsys-rep[1/8] [======34%                   ] ref_block_cuda_thread4.nsys-rep[1/8] [========42%                 ] ref_block_cuda_thread4.nsys-rep[1/8] [==================78%       ] ref_block_cuda_thread4.nsys-rep[1/8] [========================99% ] ref_block_cuda_thread4.nsys-rep[1/8] [========================100%] ref_block_cuda_thread4.nsys-rep[1/8] [========================100%] ref_block_cuda_thread4.nsys-rep
+[2/8] [0%                          ] ref_block_cuda_thread4.sqlite[2/8] [1%                          ] ref_block_cuda_thread4.sqlite[2/8] [2%                          ] ref_block_cuda_thread4.sqlite[2/8] [3%                          ] ref_block_cuda_thread4.sqlite[2/8] [4%                          ] ref_block_cuda_thread4.sqlite[2/8] [5%                          ] ref_block_cuda_thread4.sqlite[2/8] [6%                          ] ref_block_cuda_thread4.sqlite[2/8] [7%                          ] ref_block_cuda_thread4.sqlite[2/8] [8%                          ] ref_block_cuda_thread4.sqlite[2/8] [9%                          ] ref_block_cuda_thread4.sqlite[2/8] [10%                         ] ref_block_cuda_thread4.sqlite[2/8] [11%                         ] ref_block_cuda_thread4.sqlite[2/8] [12%                         ] ref_block_cuda_thread4.sqlite[2/8] [13%                         ] ref_block_cuda_thread4.sqlite[2/8] [14%                         ] ref_block_cuda_thread4.sqlite[2/8] [=15%                        ] ref_block_cuda_thread4.sqlite[2/8] [=16%                        ] ref_block_cuda_thread4.sqlite[2/8] [=17%                        ] ref_block_cuda_thread4.sqlite[2/8] [==18%                       ] ref_block_cuda_thread4.sqlite[2/8] [==19%                       ] ref_block_cuda_thread4.sqlite[2/8] [==20%                       ] ref_block_cuda_thread4.sqlite[2/8] [==21%                       ] ref_block_cuda_thread4.sqlite[2/8] [===22%                      ] ref_block_cuda_thread4.sqlite[2/8] [===23%                      ] ref_block_cuda_thread4.sqlite[2/8] [===24%                      ] ref_block_cuda_thread4.sqlite[2/8] [====25%                     ] ref_block_cuda_thread4.sqlite[2/8] [====26%                     ] ref_block_cuda_thread4.sqlite[2/8] [====27%                     ] ref_block_cuda_thread4.sqlite[2/8] [====28%                     ] ref_block_cuda_thread4.sqlite[2/8] [=====29%                    ] ref_block_cuda_thread4.sqlite[2/8] [=====30%                    ] ref_block_cuda_thread4.sqlite[2/8] [=====31%                    ] ref_block_cuda_thread4.sqlite[2/8] [=====32%                    ] ref_block_cuda_thread4.sqlite[2/8] [======33%                   ] ref_block_cuda_thread4.sqlite[2/8] [======34%                   ] ref_block_cuda_thread4.sqlite[2/8] [======35%                   ] ref_block_cuda_thread4.sqlite[2/8] [=======36%                  ] ref_block_cuda_thread4.sqlite[2/8] [=======37%                  ] ref_block_cuda_thread4.sqlite[2/8] [=======38%                  ] ref_block_cuda_thread4.sqlite[2/8] [=======39%                  ] ref_block_cuda_thread4.sqlite[2/8] [========40%                 ] ref_block_cuda_thread4.sqlite[2/8] [========41%                 ] ref_block_cuda_thread4.sqlite[2/8] [========42%                 ] ref_block_cuda_thread4.sqlite[2/8] [=========43%                ] ref_block_cuda_thread4.sqlite[2/8] [=========44%                ] ref_block_cuda_thread4.sqlite[2/8] [=========45%                ] ref_block_cuda_thread4.sqlite[2/8] [=========46%                ] ref_block_cuda_thread4.sqlite[2/8] [==========47%               ] ref_block_cuda_thread4.sqlite[2/8] [==========48%               ] ref_block_cuda_thread4.sqlite[2/8] [==========49%               ] ref_block_cuda_thread4.sqlite[2/8] [===========50%              ] ref_block_cuda_thread4.sqlite[2/8] [===========51%              ] ref_block_cuda_thread4.sqlite[2/8] [===========52%              ] ref_block_cuda_thread4.sqlite[2/8] [===========53%              ] ref_block_cuda_thread4.sqlite[2/8] [============54%             ] ref_block_cuda_thread4.sqlite[2/8] [============55%             ] ref_block_cuda_thread4.sqlite[2/8] [============56%             ] ref_block_cuda_thread4.sqlite[2/8] [============57%             ] ref_block_cuda_thread4.sqlite[2/8] [=============58%            ] ref_block_cuda_thread4.sqlite[2/8] [=============59%            ] ref_block_cuda_thread4.sqlite[2/8] [=============60%            ] ref_block_cuda_thread4.sqlite[2/8] [==============61%           ] ref_block_cuda_thread4.sqlite[2/8] [==============62%           ] ref_block_cuda_thread4.sqlite[2/8] [==============63%           ] ref_block_cuda_thread4.sqlite[2/8] [==============64%           ] ref_block_cuda_thread4.sqlite[2/8] [===============65%          ] ref_block_cuda_thread4.sqlite[2/8] [===============66%          ] ref_block_cuda_thread4.sqlite[2/8] [===============67%          ] ref_block_cuda_thread4.sqlite[2/8] [================68%         ] ref_block_cuda_thread4.sqlite[2/8] [================69%         ] ref_block_cuda_thread4.sqlite[2/8] [================70%         ] ref_block_cuda_thread4.sqlite[2/8] [================71%         ] ref_block_cuda_thread4.sqlite[2/8] [=================72%        ] ref_block_cuda_thread4.sqlite[2/8] [=================73%        ] ref_block_cuda_thread4.sqlite[2/8] [=================74%        ] ref_block_cuda_thread4.sqlite[2/8] [==================75%       ] ref_block_cuda_thread4.sqlite[2/8] [==================76%       ] ref_block_cuda_thread4.sqlite[2/8] [==================77%       ] ref_block_cuda_thread4.sqlite[2/8] [==================78%       ] ref_block_cuda_thread4.sqlite[2/8] [===================79%      ] ref_block_cuda_thread4.sqlite[2/8] [===================80%      ] ref_block_cuda_thread4.sqlite[2/8] [===================81%      ] ref_block_cuda_thread4.sqlite[2/8] [===================82%      ] ref_block_cuda_thread4.sqlite[2/8] [====================83%     ] ref_block_cuda_thread4.sqlite[2/8] [====================84%     ] ref_block_cuda_thread4.sqlite[2/8] [====================85%     ] ref_block_cuda_thread4.sqlite[2/8] [=====================86%    ] ref_block_cuda_thread4.sqlite[2/8] [=====================87%    ] ref_block_cuda_thread4.sqlite[2/8] [=====================88%    ] ref_block_cuda_thread4.sqlite[2/8] [=====================89%    ] ref_block_cuda_thread4.sqlite[2/8] [======================90%   ] ref_block_cuda_thread4.sqlite[2/8] [======================91%   ] ref_block_cuda_thread4.sqlite[2/8] [======================92%   ] ref_block_cuda_thread4.sqlite[2/8] [=======================93%  ] ref_block_cuda_thread4.sqlite[2/8] [=======================94%  ] ref_block_cuda_thread4.sqlite[2/8] [=======================95%  ] ref_block_cuda_thread4.sqlite[2/8] [=======================96%  ] ref_block_cuda_thread4.sqlite[2/8] [========================97% ] ref_block_cuda_thread4.sqlite[2/8] [========================98% ] ref_block_cuda_thread4.sqlite[2/8] [========================99% ] ref_block_cuda_thread4.sqlite[2/8] [========================100%] ref_block_cuda_thread4.sqlite[2/8] [========================100%] ref_block_cuda_thread4.sqlite
+[3/8] Executing 'nvtx_sum' stats report
+[4/8] Executing 'osrt_sum' stats report
+
+ Time (%)  Total Time (ns)  Num Calls    Avg (ns)      Med (ns)      Min (ns)    Max (ns)    StdDev (ns)           Name         
+ --------  ---------------  ---------  ------------  -------------  ----------  -----------  ------------  ---------------------
+     93.9    2,562,905,932         35  73,225,883.8  100,992,331.0         701  110,991,511  43,090,172.6  poll                 
+      4.6      124,620,465        482     258,548.7        9,425.0         313   11,826,577     850,621.9  ioctl                
+      0.9       23,592,667          1  23,592,667.0   23,592,667.0  23,592,667   23,592,667           0.0  fopen64              
+      0.5       12,759,437      2,265       5,633.3        1,152.0         199    7,091,330     149,040.3  read                 
+      0.0        1,174,369          9     130,485.4       30,934.0      22,943      601,204     198,470.7  sem_timedwait        
+      0.0        1,088,021         23      47,305.3        6,307.0       3,069      663,982     135,592.8  mmap64               
+      0.0        1,028,767          4     257,191.8      303,157.0      91,443      331,010     111,780.8  pthread_create       
+      0.0          317,179        305       1,039.9           40.0          37       30,353       5,167.2  fgets                
+      0.0          316,782         59       5,369.2          720.0         467      267,662      34,737.9  fclose               
+      0.0          232,050         47       4,937.2        4,212.0         814       10,695       2,267.1  open64               
+      0.0          141,988         64       2,218.6        1,595.0         916       11,630       1,743.8  fopen                
+      0.0           90,633         14       6,473.8        3,272.5       1,165       38,609       9,596.2  mmap                 
+      0.0           27,970          6       4,661.7        4,062.5       1,453        7,766       2,359.4  open                 
+      0.0           25,362         15       1,690.8          539.0          32        7,135       2,321.4  fflush               
+      0.0           18,948         53         357.5          287.0         132        1,600         243.3  fcntl                
+      0.0           14,702         10       1,470.2        1,453.0         565        2,464         813.8  write                
+      0.0           13,545          5       2,709.0        2,871.0       1,692        3,347         622.6  munmap               
+      0.0            7,978          2       3,989.0        3,989.0       3,907        4,071         116.0  socket               
+      0.0            6,013          1       6,013.0        6,013.0       6,013        6,013           0.0  pipe2                
+      0.0            5,449         29         187.9           44.0          34        2,326         446.5  fwrite               
+      0.0            5,433          1       5,433.0        5,433.0       5,433        5,433           0.0  fread                
+      0.0            4,990          1       4,990.0        4,990.0       4,990        4,990           0.0  connect              
+      0.0            4,950         64          77.3           24.0          23          843         169.2  pthread_mutex_trylock
+      0.0            1,431          6         238.5          211.5         149          394          99.0  dup                  
+      0.0            1,301          1       1,301.0        1,301.0       1,301        1,301           0.0  bind                 
+      0.0              858          9          95.3           91.0          31          172          59.3  putc                 
+      0.0              570          1         570.0          570.0         570          570           0.0  listen               
+
+[5/8] Executing 'cuda_api_sum' stats report
+
+ Time (%)  Total Time (ns)  Num Calls     Avg (ns)         Med (ns)      Min (ns)     Max (ns)       StdDev (ns)                  Name               
+ --------  ---------------  ---------  ---------------  ---------------  ---------  -------------  ---------------  ---------------------------------
+     92.0    2,279,391,680          2  1,139,695,840.0  1,139,695,840.0      2,785  2,279,388,895  1,611,769,375.3  cudaEventSynchronize             
+      7.8      194,175,594          6     32,362,599.0          3,684.5      2,181    194,105,881     79,237,705.1  cudaMalloc                       
+      0.1        1,357,186          1      1,357,186.0      1,357,186.0  1,357,186      1,357,186              0.0  cudaGetDeviceProperties_v2_v12000
+      0.0          802,489          6        133,748.2         21,723.0     10,947        683,997        269,976.4  cudaMemcpy                       
+      0.0          342,175          1        342,175.0        342,175.0    342,175        342,175              0.0  cudaLaunchCooperativeKernel      
+      0.0          322,053          6         53,675.5         29,279.0      2,170        130,233         60,989.0  cudaFree                         
+      0.0          273,608          2        136,804.0        136,804.0     79,532        194,076         80,994.8  cuLibraryLoadData                
+      0.0           11,420          1         11,420.0         11,420.0     11,420         11,420              0.0  cudaMemset                       
+      0.0            9,363          2          4,681.5          4,681.5      3,263          6,100          2,006.1  cudaEventRecord                  
+      0.0            6,113          2          3,056.5          3,056.5        569          5,544          3,517.9  cudaEventCreate                  
+      0.0            3,237          2          1,618.5          1,618.5        370          2,867          1,765.6  cudaEventDestroy                 
+      0.0            1,248          1          1,248.0          1,248.0      1,248          1,248              0.0  cuModuleGetLoadingMode           
+
+[6/8] Executing 'cuda_gpu_kern_sum' stats report
+
+ Time (%)  Total Time (ns)  Instances     Avg (ns)         Med (ns)        Min (ns)       Max (ns)     StdDev (ns)                              Name                            
+ --------  ---------------  ---------  ---------------  ---------------  -------------  -------------  -----------  ------------------------------------------------------------
+    100.0    2,279,371,994          1  2,279,371,994.0  2,279,371,994.0  2,279,371,994  2,279,371,994          0.0  gpu_ref_grouping(int *, int *, float *, int *, int *, int *)
+
+[7/8] Executing 'cuda_gpu_mem_time_sum' stats report
+
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)      Operation     
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ------------------
+     98.8          403,647      5  80,729.4   4,767.0     1,440   391,200    173,566.4  [CUDA memcpy HtoD]
+      0.8            3,136      1   3,136.0   3,136.0     3,136     3,136          0.0  [CUDA memcpy DtoH]
+      0.5            1,856      1   1,856.0   1,856.0     1,856     1,856          0.0  [CUDA memset]     
+
+[8/8] Executing 'cuda_gpu_mem_size_sum' stats report
+
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)      Operation     
+ ----------  -----  --------  --------  --------  --------  -----------  ------------------
+      2.443      5     0.489     0.038     0.000     2.367        1.050  [CUDA memcpy HtoD]
+      0.038      1     0.038     0.038     0.038     0.038        0.000  [CUDA memcpy DtoH]
+      0.000      1     0.000     0.000     0.000     0.000        0.000  [CUDA memset]     
+
+Generated:
+    /home/shuxin.zheng/Proj-GPU-Computing/My_proj/ref_block_cuda_thread4.nsys-rep
+    /home/shuxin.zheng/Proj-GPU-Computing/My_proj/ref_block_cuda_thread4.sqlite

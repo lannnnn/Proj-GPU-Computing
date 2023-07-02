@@ -1,5 +1,6 @@
 TLE
 
+TLE
 
 Detected 1 CUDA Capable device(s)
 using matrix file: ./data/unweighted/social_location.el
@@ -11,3 +12,5 @@ checking for using block size: (8,8)
 original density: 0.0259844
 new density: 0.026782
 Group calculation time(GPU): 160861 ms
+
+TLE

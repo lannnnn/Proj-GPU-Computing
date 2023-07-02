@@ -7,6 +7,14 @@ original density: 0.599766
 new density: 0.625693
 Group calculation time(CPU):41882ms
 
+using matrix file: ./data/weighted/3_TSC.el
+using blocksize: 8
+using tau: 0.4
+matrix info: nrows=8141, ncols=8141, nnz=1012521
+checking for using block size: (8,8)
+original density: 0.599766
+new density: 0.635546
+Group calculation time(CPU):129475ms
 
 Detected 1 CUDA Capable device(s)
 using matrix file: ./data/weighted/3_TSC.el
@@ -18,3 +26,14 @@ checking for using block size: (8,8)
 original density: 0.599766
 new density: 0.625693
 Group calculation time(GPU): 2207.37 ms
+
+Detected 1 CUDA Capable device(s)
+using matrix file: ./data/weighted/3_TSC.el
+using blocksize: 8
+using tau: 0.4
+Start calculating with dimGrid 32, dimBlock 256...
+matrix info: nrows=8141, ncols=8141, nnz=1012521
+checking for using block size: (8,8)
+original density: 0.599766
+new density: 0.635546
+Group calculation time(GPU): 4094.99 ms
