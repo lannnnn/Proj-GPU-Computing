@@ -249,7 +249,6 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
     // while still have rows not groupped
     do { 
         // find the ref rows
-        grid.sync();
 
         loopIdx = 0;
         if(idx == 0) {
@@ -282,6 +281,8 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
             loopIdx++;
             // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
         } 
+
+        grid.sync();
 
     } while(refRow[ref_size-1]!=-1);
 

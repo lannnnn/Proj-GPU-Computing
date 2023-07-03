@@ -8,7 +8,7 @@
 #include "../utilities.h"
 
 #define rows_per_thread 8
-#define ref_size 4
+#define ref_size 1
 
 #define CHECK(call)                                   \
 do                                                    \

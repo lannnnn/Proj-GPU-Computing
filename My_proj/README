@@ -84,3 +84,34 @@ tau = 0.4 block size = 8*8
 (21608, 94757, 238714)      TLE         223140ms    0.0336473->0.033627
 (58226, 58228, 214078)      TLE         TLE
 (65536, 65536, 2456398)     TLE         TLE
+
+nsys profiling msg:
+Executing 'cuda_api_sum' stats report
+ Time (%)  Total Time (ns)  Num Calls     Avg (ns)         Med (ns)      Min (ns)     Max (ns)       StdDev (ns)                  Name               
+ --------  ---------------  ---------  ---------------  ---------------  ---------  -------------  ---------------  ---------------------------------
+     92.0    2,279,391,680          2  1,139,695,840.0  1,139,695,840.0      2,785  2,279,388,895  1,611,769,375.3  cudaEventSynchronize             
+      7.8      194,175,594          6     32,362,599.0          3,684.5      2,181    194,105,881     79,237,705.1  cudaMalloc                       
+      0.1        1,357,186          1      1,357,186.0      1,357,186.0  1,357,186      1,357,186              0.0  cudaGetDeviceProperties_v2_v12000
+      0.0          802,489          6        133,748.2         21,723.0     10,947        683,997        269,976.4  cudaMemcpy                       
+      0.0          342,175          1        342,175.0        342,175.0    342,175        342,175              0.0  cudaLaunchCooperativeKernel      
+      0.0          322,053          6         53,675.5         29,279.0      2,170        130,233         60,989.0  cudaFree                         
+      0.0          273,608          2        136,804.0        136,804.0     79,532        194,076         80,994.8  cuLibraryLoadData                
+      0.0           11,420          1         11,420.0         11,420.0     11,420         11,420              0.0  cudaMemset                       
+      0.0            9,363          2          4,681.5          4,681.5      3,263          6,100          2,006.1  cudaEventRecord                  
+      0.0            6,113          2          3,056.5          3,056.5        569          5,544          3,517.9  cudaEventCreate                  
+      0.0            3,237          2          1,618.5          1,618.5        370          2,867          1,765.6  cudaEventDestroy                 
+      0.0            1,248          1          1,248.0          1,248.0      1,248          1,248              0.0  cuModuleGetLoadingMode           
+
+Executing 'cuda_gpu_mem_time_sum' stats report
+ Time (%)  Total Time (ns)  Count  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)      Operation     
+ --------  ---------------  -----  --------  --------  --------  --------  -----------  ------------------
+     98.8          403,647      5  80,729.4   4,767.0     1,440   391,200    173,566.4  [CUDA memcpy HtoD]
+      0.8            3,136      1   3,136.0   3,136.0     3,136     3,136          0.0  [CUDA memcpy DtoH]
+      0.5            1,856      1   1,856.0   1,856.0     1,856     1,856          0.0  [CUDA memset]     
+
+Executing 'cuda_gpu_mem_size_sum' stats report
+ Total (MB)  Count  Avg (MB)  Med (MB)  Min (MB)  Max (MB)  StdDev (MB)      Operation     
+ ----------  -----  --------  --------  --------  --------  -----------  ------------------
+      2.443      5     0.489     0.038     0.000     2.367        1.050  [CUDA memcpy HtoD]
+      0.038      1     0.038     0.038     0.038     0.038        0.000  [CUDA memcpy DtoH]
+      0.000      1     0.000     0.000     0.000     0.000        0.000  [CUDA memset]
