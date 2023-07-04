@@ -1,5 +1,0 @@
-Failed to create '/home/shuxin.zheng/Proj-GPU-Computing/My_proj/ref_block_cuda_thread1_new.nsys-rep': File exists.
-Use `--force-overwrite true` to overwrite existing files.
-Failed to create '/home/shuxin.zheng/Proj-GPU-Computing/My_proj/ref_block_cuda_thread1_new.sqlite': File exists.
-Use `--force-overwrite true` to overwrite existing files.
-SKIPPED: /tmp/nsys-report-e7db.sqlite does not contain NV Tools Extension (NVTX) data.
