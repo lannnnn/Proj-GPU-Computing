@@ -255,12 +255,17 @@ void print_matrix(COO coo, int block_rows) {
 }
 
 void print_vec(std::vector<std::vector<int>> label) {
+    int groupSize = 0;
     for(int i=0; i<label.size(); i++) {
         for(int j = 0; j< label[i].size(); j++) {
             std::cout << label[i][j] << " ";
         }
-        if(label[i].size() > 0) std::cout << std::endl;
+        if(label[i].size() > 0)  {
+            groupSize++;
+            std::cout << std::endl;
+        }
     }
+    std::cout << "groupSize = " << groupSize << std::endl;
 }
 
 void print_map(std::multimap<int, int, std::greater<int>> rankMap) {

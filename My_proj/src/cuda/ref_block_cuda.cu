@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
     std::cout << "using blocksize: " << block_cols << std::endl;
     std::cout << "using tau: " << tau << std::endl;
 
-    // COO coo = readELFileWeighted(filename);
-    COO coo = readELFileUnweighted(filename);
+    COO coo = readMTXFileUnweighted(filename);
+    // COO coo = readELFileUnweighted(filename);
     if(coo.rows == 0) {
         std::cout << "not acceptable matrix file" << std::endl;
         return;
