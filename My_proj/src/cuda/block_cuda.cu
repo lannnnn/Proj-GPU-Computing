@@ -9,9 +9,19 @@
 int main(int argc, char* argv[]) {
 
     int deviceCount = 0;
+    int device;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
     int block_cols = 8;
     int print = 0;
+    int mtx,el;
+
+    cudaEvent_t startTime, endTime;
+    float elapsedTime = 0.0;
+
+    // This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
+    int numBlocksPerSm = 0;
+    // Number of threads my_kernel will be launched with
+    int numThreads = BLK_SIZE;
 
     if (error_id != cudaSuccess) {
         printf("cudaGetDeviceCount returned %d\n-> %s\n",
@@ -25,27 +35,38 @@ int main(int argc, char* argv[]) {
         printf("There are no available device(s) that support CUDA\n");
         return -1;
     } else {
-        cudaSetDevice(0);
+        cudaGetDevice(&device);
         printf("Detected %d CUDA Capable device(s)\n", deviceCount);
     }
 
-    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
+    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/weighted/TEST_matrix_weighted.el";
     // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/0_mycielskian13.el";
-    // std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
+    std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
-    float tau = 0.8;
-    // method allow inordered input data
+    float tau = 0.4;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau, &print);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;
     std::cout << "using tau: " << tau << std::endl;
 
-    // COO coo = readELFileWeighted(filename);
-    COO coo = readELFileUnweighted(filename);
+    COO coo;
+
+    if(mtx)  {
+        coo = readMTXFileUnweighted(filename);
+        std::cout << "Using MTX format" << std::endl;
+    }
+    else {
+        coo = readELFileUnweighted(filename);
+        std::cout << "Using EL format" << std::endl;
+    }
+    if(coo.rows == 0) {
+        std::cout << "not acceptable matrix file" << std::endl;
+        return;
+    }
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time

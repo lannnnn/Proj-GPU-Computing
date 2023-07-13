@@ -4,7 +4,7 @@
 #include <sstream>
 #include "cuda_impl.cuh"
 
-#define BLK_SIZE 256
+#define BLK_SIZE 128
 
 int main(int argc, char* argv[]) {
 
@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
     int block_cols = 8;
     int print = 0;
+    int mtx = 0, el = 0;
 
     cudaEvent_t startTime, endTime;
     float elapsedTime = 0.0;
@@ -45,15 +46,22 @@ int main(int argc, char* argv[]) {
     float tau = 0.4;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau, &print);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;
     std::cout << "using tau: " << tau << std::endl;
+    
+    COO coo ;
 
-    COO coo = readMTXFileUnweighted(filename);
-    // COO coo = readELFileUnweighted(filename);
+    if(mtx==1)  {
+        coo = readMTXFileUnweighted(filename);
+        std::cout << "Using MTX format" << std::endl;
+    } else {
+        coo = readELFileUnweighted(filename);
+        std::cout << "Using EL format" << std::endl;
+    }
     if(coo.rows == 0) {
         std::cout << "not acceptable matrix file" << std::endl;
         return;
@@ -102,13 +110,15 @@ int main(int argc, char* argv[]) {
 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0);
+    CHECK( cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0) );
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
     void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
                                 (void *)&d_groupSize, (void *)&d_refRow};
+    // void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
+    //                             (void *)&d_groupSize};
     dim3 dimBlock(numThreads, 1, 1);
     int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
-    if(totalThreads > csr.rows) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE;
+    if(totalThreads > csr.rows/rows_per_thread) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE/rows_per_thread;
     dim3 dimGrid(grdDim, 1, 1);
     // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
     std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << "..." << std::endl;

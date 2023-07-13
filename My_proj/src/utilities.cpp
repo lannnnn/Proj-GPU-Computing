@@ -6,9 +6,10 @@ void helpMesg() {
     std::cout<<"    -t tau"<<std::endl;
     std::cout<<"    -b block size"<<std::endl;
     std::cout<<"    -p SET TO PRINT GROUP INFO"<<std::endl;
+    std::cout<<"    -m or -e SET MATRIX FILE FORMAT"<<std::endl;
 }
 
-void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print) {
+void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print, int* mtx, int* el) {
     std::string* str;
     char* endStr;
     for(int i = 1;i < argc; ++i){
@@ -44,6 +45,14 @@ void readConfig(int argc, char** argv, std::string* filename, int* block_cols, f
             case 'p':
                 std::cout<<"case \'-p\' found, set to print group info"<<std::endl;
                 *print = 1;
+                break;
+            case 'm':
+                std::cout<<"case \'-m\' found, set to mtx format"<<std::endl;
+                *mtx = 1;
+                break;
+            case 'e':
+                std::cout<<"case \'-e\' found, set to el format"<<std::endl;
+                *el = 1;
                 break;
             default:
                 std::cout<<"unrecognized input, pls check the help info"<<std::endl;

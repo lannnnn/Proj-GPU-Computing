@@ -288,3 +288,65 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
 
     return;
 }
+
+
+__global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tarrow;
+    int gap=0;
+    int goalVal = blockDim.x * gridDim.x;
+    int loopIdx = 0;
+    auto grid = cooperative_groups::this_grid();
+    float minDist;
+    float dist;
+    int rowStart = idx * rows_per_thread;
+
+    // build the groupInfo
+    // while((idx+goalVal*loopIdx) < groupSize[0]) {
+    //     buildGroupInfo(rowPtr, colIdx, groupList, resultList, groupInfo[idx+goalVal*loopIdx], idx+goalVal*loopIdx, 0);
+    //     groupList[idx+goalVal*loopIdx] = -1; // clear the group list
+    //     loopIdx++;
+    // }
+
+    // while still have rows not groupped
+    do { 
+        // find the ref rows
+
+        loopIdx = 0;
+        if(idx == 0) {
+            findRef(refRow, rowPtr, colIdx, groupList, tau[0], groupSize[0]);
+        }
+        
+	    grid.sync();
+        // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
+
+        while(rowStart + loopIdx < groupSize[0] || loopIdx < rows_per_thread) {
+            minDist = tau[0];
+            tarrow = -1;
+            // compare between each groups
+            if(groupList[idx+goalVal*loopIdx]==-1) {
+                for(int i=0; i<ref_size; i++) {
+                    if(refRow[i] == -1) continue;
+                    dist = HammingDistance(rowPtr, colIdx, refRow[i], idx+goalVal*loopIdx);
+                    // printf("threadIdx = %d, dist = %f\n", idx, dist);
+                    if(dist < minDist) {
+                        tarrow = refRow[i];
+                        minDist = dist;
+                    }
+                }
+            }
+
+            if(tarrow!=-1) {
+                // combineGroup(groupInfo[tarrow], groupInfo[idx]);
+                groupList[idx+goalVal*loopIdx] = tarrow;
+            }
+            loopIdx++;
+            // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
+        } 
+
+        grid.sync();
+
+    } while(refRow[ref_size-1]!=-1);
+
+    return;
+}

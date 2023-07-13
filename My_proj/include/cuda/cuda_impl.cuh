@@ -7,7 +7,7 @@
 #include <cooperative_groups.h>
 #include "../utilities.h"
 
-#define rows_per_thread 8
+#define rows_per_thread 1
 #define ref_size 1
 
 #define CHECK(call)                                   \
@@ -47,5 +47,6 @@ __global__ void test(int* groupList, int* resultList);
 __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
                                     int* resultList, int* groupSize, int goalVal, int block_cols);
 __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow);
+__global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow);
 
 #endif

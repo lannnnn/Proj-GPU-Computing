@@ -19,16 +19,25 @@ int main(int argc, char* argv[]) {
 
     float fine_tau = 0.8;
     int print = 0;
+    int mtx = 0, el = 0;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &fine_tau, &print);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;
     std::cout << "using tau: " << fine_tau << std::endl;
 
-    COO coo = readELFileUnweighted(filename);
+    COO coo ;
+
+    if(mtx==1)  {
+        coo = readMTXFileUnweighted(filename);
+        std::cout << "Using MTX format" << std::endl;
+    } else {
+        coo = readELFileUnweighted(filename);
+        std::cout << "Using EL format" << std::endl;
+    }
 
     // init label list for distance calculation
     std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
