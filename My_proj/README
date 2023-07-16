@@ -21,6 +21,8 @@ The ref_block_cuda use the alg as:
 
 To run the code in cluster, referring to the script 'ref_test.sh'. This script can be directly use in MARZOLA
 
+To change the referring row size, change the value of 'ref_size' in the file cuda_impl.cuh
+
 ------------------------------------------------------------------------------------------------------------------
 
 Updated 24/06 - QUIT

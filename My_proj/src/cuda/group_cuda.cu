@@ -290,7 +290,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
 }
 
 
-__global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow) {
+__global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int tarrow;
     int gap=0;
@@ -299,7 +299,6 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
     auto grid = cooperative_groups::this_grid();
     float minDist;
     float dist;
-    int rowStart = idx * rows_per_thread;
 
     // build the groupInfo
     // while((idx+goalVal*loopIdx) < groupSize[0]) {
@@ -318,16 +317,16 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
         }
         
 	    grid.sync();
-        // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
+        // printf("threadIdx = %d, rowStart = %d, rows_per_thread = %d\n", idx, rowStart, rows_per_thread[0]);
 
-        while(rowStart + loopIdx < groupSize[0] || loopIdx < rows_per_thread) {
+        while((idx + loopIdx*goalVal) < groupSize[0] && loopIdx < rows_per_thread[0]) {
             minDist = tau[0];
             tarrow = -1;
             // compare between each groups
-            if(groupList[idx+goalVal*loopIdx]==-1) {
+            if(groupList[idx + loopIdx*goalVal]==-1) {
                 for(int i=0; i<ref_size; i++) {
                     if(refRow[i] == -1) continue;
-                    dist = HammingDistance(rowPtr, colIdx, refRow[i], idx+goalVal*loopIdx);
+                    dist = HammingDistance(rowPtr, colIdx, refRow[i], idx + loopIdx*goalVal);
                     // printf("threadIdx = %d, dist = %f\n", idx, dist);
                     if(dist < minDist) {
                         tarrow = refRow[i];
@@ -338,7 +337,7 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
 
             if(tarrow!=-1) {
                 // combineGroup(groupInfo[tarrow], groupInfo[idx]);
-                groupList[idx+goalVal*loopIdx] = tarrow;
+                groupList[idx + loopIdx*goalVal] = tarrow;
             }
             loopIdx++;
             // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);

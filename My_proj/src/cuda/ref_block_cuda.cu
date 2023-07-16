@@ -4,7 +4,7 @@
 #include <sstream>
 #include "cuda_impl.cuh"
 
-#define BLK_SIZE 128
+#define BLK_SIZE 256
 
 int main(int argc, char* argv[]) {
 
@@ -79,6 +79,7 @@ int main(int argc, char* argv[]) {
     int* d_groupList;
     int* d_groupSize;
     int* d_refRow;
+    int* d_rows_per_thread;
     float* d_tau;
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
     CHECK( cudaMalloc((int**)&d_refRow, ref_size * sizeof(int)));
     CHECK( cudaMalloc((float**)&d_tau, sizeof(float)));
+    CHECK( cudaMalloc((int**)&d_rows_per_thread, sizeof(int)));
     CHECK( cudaMemset(d_refRow, 0, ref_size * sizeof(int)));
     // data copy to GPU
     CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
@@ -110,25 +112,32 @@ int main(int argc, char* argv[]) {
 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device);
-    CHECK( cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping, numThreads, 0) );
+    CHECK( cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping_O1, BLK_SIZE, 0) );
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
-    void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
-                                (void *)&d_groupSize, (void *)&d_refRow};
     // void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
-    //                             (void *)&d_groupSize};
-    dim3 dimBlock(numThreads, 1, 1);
+    //                             (void *)&d_groupSize, (void *)&d_refRow};
+    dim3 dimBlock(BLK_SIZE, 1, 1);
     int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
-    if(totalThreads > csr.rows/rows_per_thread) grdDim = (csr.rows+BLK_SIZE)/BLK_SIZE/rows_per_thread;
+    if(totalThreads > csr.rows/4 && csr.rows < 4096) {
+        // ref row size >=2
+        grdDim = (csr.rows+BLK_SIZE*4)/(BLK_SIZE*4); 
+        totalThreads = grdDim * BLK_SIZE;
+    }
     dim3 dimGrid(grdDim, 1, 1);
+    int rows_per_thread = (csr.rows + totalThreads) / totalThreads;
+
+    CHECK( cudaMemcpy(d_rows_per_thread, &rows_per_thread, sizeof(int), cudaMemcpyHostToDevice));
+    void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
+                            (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread};
     // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
     std::cout << "Start calculating with dimGrid " << grdDim << ", dimBlock " << numThreads << "..." << std::endl;
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
-
+    std::cout << "rows_per_thread=" << rows_per_thread << std::endl;
     cudaEventCreate(&startTime);
     cudaEventCreate(&endTime);
     cudaEventRecord(startTime, 0);
 
-    cudaLaunchCooperativeKernel((void*)gpu_ref_grouping, dimGrid, dimBlock, kernelArgs);
+    cudaLaunchCooperativeKernel((void*)gpu_ref_grouping_O1, dimGrid, dimBlock, kernelArgs);
 
     cudaEventRecord(endTime, 0);
     cudaEventSynchronize(startTime);
