@@ -13,6 +13,6 @@ module load cuda/12.1
 
 # export CUDA_LAUNCH_BLOCKING=1
 
-srun ./ref_block_cuda -f ./data/unweighted/grid2.mtx -t 0.6 -b 8 -m
+srun ./ref_block_cuda -f ./data/unweighted/0_mycielskian13.el -t 0.6 -b 8 -e
 # srun nsys profile --stats=true --cuda-memory-usage=true --cudabacktrace=all --gpu-metrics-device=0 -o ref_block_cuda_thread1_new ./ref_block_cuda -f ./data/weighted/1_nemeth21.el -t 0.6 -b 8
 # srun ncu  --target-processes all --export ref_block.report --import-source=yes  --metrics regex:sm__inst_executed_pipe_*,regex:sm__sass_thread_inst_executed_op*  --page raw --set full ./ref_block_cuda -f ./data/weighted/1_nemeth21.el -t 0.6 -b 8

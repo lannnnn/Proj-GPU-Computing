@@ -1,13 +1,13 @@
 Detected 1 CUDA Capable device(s)
-case '-m' found, set to mtx format
-using matrix file: ./data/unweighted/grid2.mtx
+case '-e' found, set to el format
+using matrix file: ./data/unweighted/0_mycielskian13.el
 using blocksize: 8
 using tau: 0.6
-Using MTX format
-Start calculating with dimGrid 4, dimBlock 256...
-matrix info: nrows=3296, ncols=3296, nnz=6432
+Using EL format
+Start calculating with dimGrid 6, dimBlock 256...
+matrix info: nrows=6144, ncols=6143, nnz=613871
 rows_per_thread=4
 checking for using block size: (8,8)
-original density: 0.0492165
-new density: 0.0463989
-Group calculation time(GPU): 495.07 ms
+original density: 0.205136
+new density: 0.135628
+Group calculation time(GPU): 5925.97 ms

@@ -294,7 +294,7 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int tarrow;
     int gap=0;
-    int goalVal = blockDim.x * gridDim.x;
+    int goalVal = (groupSize[0] + rows_per_thread[0] - 1) / rows_per_thread[0];
     int loopIdx = 0;
     auto grid = cooperative_groups::this_grid();
     float minDist;
@@ -319,6 +319,7 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
 	    grid.sync();
         // printf("threadIdx = %d, rowStart = %d, rows_per_thread = %d\n", idx, rowStart, rows_per_thread[0]);
 
+        if(idx*row_size < groupSize[0])
         while((idx + loopIdx*goalVal) < groupSize[0] && loopIdx < rows_per_thread[0]) {
             minDist = tau[0];
             tarrow = -1;

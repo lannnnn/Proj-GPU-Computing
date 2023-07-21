@@ -116,15 +116,16 @@ int main(int argc, char* argv[]) {
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
     // void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
     //                             (void *)&d_groupSize, (void *)&d_refRow};
-    dim3 dimBlock(BLK_SIZE, 1, 1);
     int grdDim = deviceProp.multiProcessorCount*numBlocksPerSm;
-    if(totalThreads > csr.rows/4 && csr.rows < 4096) {
+    if(totalThreads > (csr.rows + row_size - 1)/row_size) {
         // ref row size >=2
-        grdDim = (csr.rows+BLK_SIZE*4)/(BLK_SIZE*4); 
-        totalThreads = grdDim * BLK_SIZE;
+        totalThreads = (csr.rows + row_size - 1)/row_size;
+        grdDim = (totalThreads + BLK_SIZE - 1)/BLK_SIZE;
     }
     dim3 dimGrid(grdDim, 1, 1);
-    int rows_per_thread = (csr.rows + totalThreads) / totalThreads;
+    dim3 dimBlock(BLK_SIZE, 1, 1);
+    int rows_per_thread = (csr.rows + totalThreads-1) / totalThreads;
+    // if(rows_per_thread < row_size) rows_per_thread = row_size;
 
     CHECK( cudaMemcpy(d_rows_per_thread, &rows_per_thread, sizeof(int), cudaMemcpyHostToDevice));
     void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
