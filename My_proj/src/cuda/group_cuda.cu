@@ -30,8 +30,8 @@ __device__ float HammingDistance(int* rowPtr, int* colIdx, int baseline, int ref
             dist++; j++;
         }
     }
-    if(i >= baseRank) dist += (refRank - j - 1);
-    if(j >= refRank) dist += (baseRank - i - 1);
+    if(i >= baseRank && j<refRank) dist += (refRank - j);
+    if(j >= refRank && i<baseRank) dist += (baseRank - i);
 
     //printf("distance = %f\n", (double) dist / (double) cols);
 
@@ -266,7 +266,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
                 for(int i=0; i<ref_size; i++) {
                     if(refRow[i] == -1) continue;
                     dist = HammingDistance(rowPtr, colIdx, refRow[i], idx+goalVal*loopIdx);
-                    // printf("threadIdx = %d, dist = %f\n", idx, dist);
+                    //printf("threadIdx = %d, refrow = %d, checkrow = %d, dist = %f\n", idx, refRow[i], idx+goalVal*loopIdx, dist);
                     if(dist < minDist) {
                         tarrow = refRow[i];
                         minDist = dist;
@@ -328,7 +328,7 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
                 for(int i=0; i<ref_size; i++) {
                     if(refRow[i] == -1) continue;
                     dist = HammingDistance(rowPtr, colIdx, refRow[i], idx + loopIdx*goalVal);
-                    // printf("threadIdx = %d, dist = %f\n", idx, dist);
+                    // printf("threadIdx = %d, refrow = %d, checkrow = %d, dist = %f\n", idx, refRow[i], idx+goalVal*loopIdx, dist);
                     if(dist < minDist) {
                         tarrow = refRow[i];
                         minDist = dist;

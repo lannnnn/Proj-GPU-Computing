@@ -160,6 +160,58 @@ COO readELFileUnweighted(const std::string& filename) {
     return coo;
 }
 
+COO readELFileMask(const std::string& filename, int block_col) {
+    std::ifstream fin;
+    fin.open(filename,std::ios_base::in);
+    if (!fin.is_open()) {
+        std::cout << "Failed to open file: " << filename << std::endl;
+        return COO();
+    }
+
+    std::string line;
+    int rows = 0;
+    int cols = 0;
+    int nnz = 0;
+
+    int row, col;
+    double value;
+
+    // Skip header lines
+    while (std::getline(fin, line) && line[0] == '%') {
+        // Skip comment lines
+    }
+
+    // initial the csr struct without size message
+    COO coo(0, 0, 0);
+    int current_row = 0;
+    do {
+        std::istringstream iss(line);
+        iss >> row >> col;
+        // std::cout << line << std::endl;
+        // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
+        if(row < current_row) {
+            std::cout << "Please enter the row with ascending order...." << std::endl;
+            return COO();
+        }
+        for(int i=current_row; i<=row; i++) {
+            coo.row_message.push_back(ROW());
+            current_row ++;
+        }
+        current_row --;
+        col = col/block_col;
+        if(coo.row_message[row].nzValue[col] != 1) {
+            coo.row_message[row].nzRowCount++;
+            coo.row_message[row].nzValue[col] = 1;
+            coo.nnz++;
+        }
+        if(col > coo.cols) coo.cols = col;
+    } while((std::getline(fin, line)));
+    coo.rows = current_row+1;
+    coo.cols++;
+    fin.close();
+    return coo;
+}
+
 COO readMTXFileWeighted(const std::string& filename) {
     std::ifstream fin;
     fin.open(filename,std::ios_base::in);
@@ -239,6 +291,52 @@ COO readMTXFileUnweighted(const std::string& filename) {
     return coo;
 }
 
+COO readMTXFileMask(const std::string& filename, int block_col) {
+    std::ifstream fin;
+    fin.open(filename,std::ios_base::in);
+    if (!fin.is_open()) {
+        std::cout << "Failed to open file: " << filename << std::endl;
+        return COO();
+    }
+
+    std::string line;
+    int rows = 0;
+    int cols = 0;
+    int nnz = 0;
+
+    int row, col;
+
+    // Skip header lines
+    while (std::getline(fin, line) && line[0] == '%') {
+        // Skip comment lines
+    }
+
+    // Read matrix size and nnz
+    std::istringstream iss(line);
+    iss >> rows >> cols;
+
+    COO coo(rows, cols, nnz);
+    while (std::getline(fin, line)) {
+        std::istringstream iss(line);
+        iss >> row >> col;
+
+        // Adjust for 1-based indexing in MTX format
+        row--;
+        col--;
+
+        col = col/block_col;
+        if(coo.row_message[row].nzValue[col] != 1) {
+            coo.row_message[row].nzRowCount++;
+            coo.row_message[row].nzValue[col] = 1;
+            nnz ++;
+        }
+    }
+    coo.nnz = nnz;
+
+    fin.close();
+    return coo;
+}
+
 void print_pointer(int* p, int size) {
     for(int i=0; i<size; i++) {
         std::cout << p[i] << " ";
@@ -264,17 +362,24 @@ void print_matrix(COO coo, int block_rows) {
 }
 
 void print_vec(std::vector<std::vector<int>> label) {
-    int groupSize = 0;
     for(int i=0; i<label.size(); i++) {
         for(int j = 0; j< label[i].size(); j++) {
             std::cout << label[i][j] << " ";
         }
         if(label[i].size() > 0)  {
-            groupSize++;
             std::cout << std::endl;
         }
     }
-    std::cout << "groupSize = " << groupSize << std::endl;
+}
+
+int count_group(std::vector<std::vector<int>> label) {
+    int groupSize = 0;
+    for(int i=0; i<label.size(); i++) {
+        if(label[i].size() > 0)  {
+            groupSize++;
+        }
+    }
+    return groupSize;
 }
 
 void print_map(std::multimap<int, int, std::greater<int>> rankMap) {

@@ -54,12 +54,15 @@ int main(int argc, char* argv[]) {
     std::cout << "using tau: " << tau << std::endl;
     
     COO coo ;
+    COO mask_coo ;
 
     if(mtx==1)  {
         coo = readMTXFileUnweighted(filename);
+        mask_coo = readMTXFileMask(filename, block_cols);
         std::cout << "Using MTX format" << std::endl;
     } else {
         coo = readELFileUnweighted(filename);
+        mask_coo = readELFileMask(filename, block_cols);
         std::cout << "Using EL format" << std::endl;
     }
     if(coo.rows == 0) {
@@ -68,10 +71,17 @@ int main(int argc, char* argv[]) {
     }
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
+    CSR mask_csr(mask_coo.rows, mask_coo.cols, mask_coo.nnz);
+
+    if(print) {
+        print_matrix(mask_coo, mask_coo.rows);
+    }
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
+    cooToCsr(mask_coo, mask_csr);
     // free the matrix, use csr
     coo.row_message.clear();
+    mask_coo.row_message.clear();
  
     // device memory allocation
     int* d_rowPtr;
@@ -82,7 +92,7 @@ int main(int argc, char* argv[]) {
     int* d_rows_per_thread;
     float* d_tau;
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
-    CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_colIdx, mask_csr.nnz * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupList, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
     CHECK( cudaMalloc((int**)&d_refRow, ref_size * sizeof(int)));
@@ -90,15 +100,15 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMalloc((int**)&d_rows_per_thread, sizeof(int)));
     CHECK( cudaMemset(d_refRow, 0, ref_size * sizeof(int)));
     // data copy to GPU
-    CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
-    CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMemcpy(d_rowPtr, &mask_csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMemcpy(d_colIdx, &mask_csr.colIdx[0], mask_csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_tau, &tau, sizeof(float), cudaMemcpyHostToDevice));
 
     // groupList initialized as 0..n
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_resultList = (int*)malloc(csr.rows * sizeof(int));
     int* h_rowPtr = (int*)malloc((csr.rows+1) * sizeof(int));
-    int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
+    int* h_colIdx = (int*)malloc(mask_csr.nnz * sizeof(int));
     for(int i=0; i< csr.rows; i++) {
         h_groupList[i] = -1;
         h_resultList[i] = i;
@@ -175,5 +185,8 @@ int main(int argc, char* argv[]) {
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "Group calculation time(GPU): " << elapsedTime << " ms" << std::endl;
+    int group_num = count_group(fine_group);
+    std::cout << "Total group number: " << group_num << std::endl;
+
     return 0;
 }

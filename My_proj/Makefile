@@ -17,7 +17,7 @@ EXECUDA := block_cuda
 EXEREFCUDA := ref_block_cuda
 
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o 
+PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o
 
 CPPFLAGS := -Iinclude -MMD -MP # -I is a preprocessor flag, not a compiler flag
 LDFLAGS  := -Llib              # -L is a linker flag
@@ -28,7 +28,7 @@ all: $(EXEBLOCK)
 par: $(EXEPAR)
 
 $(EXEBLOCK): $(OBJ) | $(BIN_DIR)
-	$(CC) $(COPTS) $(CPPFLAGS) -o $@ $^
+	$(CC) $(COPTS) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
 
 $(EXEPAR): parmetistest.o 
 	$(MPICC) $(COPTS) $(LDFLAGS) -o $@ $(PAR_OBJ) $(LDLIBS)
@@ -57,7 +57,7 @@ $(CUDA_OBJ_DIR)/block_cuda.o: $(CUDA_SRC_DIR)/block_cuda.cu
 
 $(CUDA_OBJ_DIR)/ref_block_cuda.o: $(CUDA_SRC_DIR)/ref_block_cuda.cu
 	mkdir -p $(CUDA_OBJ_DIR)
-	$(NVCC) $(CUDA_CXXFLAGS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@
+	$(NVCC) $(CUDA_CXXFLAGS) $(CPPFLAGS) $(CUDA_INCLUDE) -c $< -o $@ 
 
 $(CUDA_OBJ_DIR)/group_cuda.o: $(CUDA_SRC_DIR)/group_cuda.cu
 	mkdir -p $(CUDA_OBJ_DIR)
@@ -67,7 +67,7 @@ $(BIN_DIR)/$(EXECUDA) : $(CUDA_OBJ_DIR)/block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.
 	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $(CUDA_OBJ_DIR)/block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS) 
 
 $(BIN_DIR)/$(EXEREFCUDA) : $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS)  
-	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS)
+	$(NVCC) $(CUDA_CXXFLAGS) $(CUDA_INCLUDE) -o $@ $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/group_cuda.o $(CUDA_OBJECTS) 
 
 #-------------------------------------------------------------------------
 
