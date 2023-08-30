@@ -7,13 +7,14 @@ void helpMesg() {
     std::cout<<"    -b block size"<<std::endl;
     std::cout<<"    -p SET TO PRINT GROUP INFO"<<std::endl;
     std::cout<<"    -m or -e SET MATRIX FILE FORMAT"<<std::endl;
+    std::cout<<"    -l to iterate tau to find the best block density"<<std::endl;
 }
 
-void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print, int* mtx, int* el) {
+void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print, int* mtx, int* el, int* list) {
     std::string* str;
     char* endStr;
     for(int i = 1;i < argc; ++i){
-        switch(argv[i][1]){//确定选项类型：-h,-d,-v,-l,-o;或者其他
+        switch(argv[i][1]){
             case 'f':
                 if(argc <= (i+1)) {
                     std::cout<<"no file name found, please check input...."<<std::endl;
@@ -53,6 +54,11 @@ void readConfig(int argc, char** argv, std::string* filename, int* block_cols, f
             case 'e':
                 std::cout<<"case \'-e\' found, set to el format"<<std::endl;
                 *el = 1;
+                break;
+            case 'l':
+                std::cout<<"case \'-l\' found, iterating to find tau"<<std::endl;
+                std::cout<<"****Notic: list func can not be use together with specific tau****"<<std::endl;
+                *list = 1;
                 break;
             default:
                 std::cout<<"unrecognized input, pls check the help info"<<std::endl;

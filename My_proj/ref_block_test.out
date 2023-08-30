@@ -1,14 +1,34 @@
 Detected 1 CUDA Capable device(s)
 case '-m' found, set to mtx format
-using matrix file: ./data/weighted/mesh3em5.mtx
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/weighted/1138_bus.mtx
 using blocksize: 8
-using tau: 0.2
 Using MTX format
-Start calculating with dimGrid 1, dimBlock 256...
-matrix info: nrows=289, ncols=289, nnz=1089
+Start calculating with dimGrid 2, dimBlock 256...
+matrix info: nrows=1138, ncols=1138, nnz=2596
 rows_per_thread=4
+using tau: 0.9
+new_density: 0.0483462
+using tau: 0.8
+new_density: 0.0480598
+using tau: 0.6
+new_density: 0.0492861
+using tau: 0.5
+new_density: 0.0528158
+using tau: 0.4
+new_density: 0.0526786
+using tau: 0.3
+new_density: 0.0557944
+using tau: 0.2
+new_density: 0.0561807
+using tau: 0.1
+new_density: 0.0561807
+using tau: 0.01
+new_density: 0.0561807
+SUMMARY: 
 checking for using block size: (8,8)
-original density: 0.122415
-new density: 0.122415
-Group calculation time(GPU): 24.4081 ms
-Total group number: 106
+original density: 0.0561807
+best tau: 0.2
+best density: 0.0561807
+Group calculation time(GPU): 1657.09 ms

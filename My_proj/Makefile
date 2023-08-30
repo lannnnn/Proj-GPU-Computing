@@ -73,7 +73,7 @@ $(BIN_DIR)/$(EXEREFCUDA) : $(CUDA_OBJ_DIR)/ref_block_cuda.o $(CUDA_OBJ_DIR)/grou
 
 .PHONY: all clean
 
-cuda : $(BIN_DIR)/$(EXECUDA)  $(BIN_DIR)/$(EXEREFCUDA)
+cuda :   $(BIN_DIR)/$(EXEREFCUDA)
 
 clean:
 	@$(RM) -rv $(BIN_DIR)/$(EXEBLOCK) $(BIN_DIR)/$(EXEPAR) $(BIN_DIR)/$(EXECUDA) $(BIN_DIR)/$(EXEREFCUDA) $(OBJ_DIR) # The @ disables the echoing of the command

@@ -25,9 +25,9 @@ module load cuda/12.1
 #srun ./ref_block_cuda -f ./data/weighted/bcsstk18_r.el -t 0.2 -b 8 -e
 
 #srun ./ref_block_cuda -f ./data/unweighted/grid2.mtx -t 0.2 -b 8 -m
-#srun ./ref_block_cuda -f ./data/weighted/494_bus.mtx -t 0.2 -b 8 -m
-#srun ./ref_block_cuda -f ./data/weighted/1138_bus.mtx -t 0.2 -b 8 -m
+#srun ./ref_block_cuda -f ./data/weighted/494_bus.mtx -t 0.2 -b 8 -m -l
+srun ./ref_block_cuda -f ./data/weighted/1138_bus.mtx -t 0.2 -b 8 -m -l
 #srun ./ref_block_cuda -f ./data/weighted/freeFlyingRobot_4.mtx -t 0.2 -b 8 -m
 #srun ./ref_block_cuda -f ./data/weighted/freeFlyingRobot_7.mtx -t 0.2 -b 8 -m
 #srun ./ref_block_cuda -f ./data/weighted/kron_g500-logn16.mtx -t 0.2 -b 8 -m
-srun ./ref_block_cuda -f ./data/weighted/mesh3em5.mtx -t 0.2 -b 8 -m
+#srun ./ref_block_cuda -f ./data/weighted/mesh3em5.mtx -t 0.2 -b 8 -m -l

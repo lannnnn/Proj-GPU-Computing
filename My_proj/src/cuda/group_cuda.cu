@@ -300,13 +300,6 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
     float minDist;
     float dist;
 
-    // build the groupInfo
-    // while((idx+goalVal*loopIdx) < groupSize[0]) {
-    //     buildGroupInfo(rowPtr, colIdx, groupList, resultList, groupInfo[idx+goalVal*loopIdx], idx+goalVal*loopIdx, 0);
-    //     groupList[idx+goalVal*loopIdx] = -1; // clear the group list
-    //     loopIdx++;
-    // }
-
     // while still have rows not groupped
     do { 
         // find the ref rows

@@ -12,6 +12,14 @@ Usage:
     for CUDA code: make sure have nvcc compiler. run `make cuda`
         the target named 'block_cuda' and 'ref_block_cuda'
 
+        Usage parameter list:
+            -f file direct
+            -t tau
+            -b block size
+            -p SET TO PRINT GROUP INFO
+            -m or -e SET MATRIX FILE FORMAT
+            -l to iterate tau to find the best block density
+
 The block_cuda use the alg as:
     We treat each group as row, so when two rows is near enough, we produce a new row and disable the original rows. Each thread will take  responsibility of some of the rows. Due to the reason that the size of label(cols message of each row), row number and group size all varies, it's not easy to realize this alg in GPU, mostly due to we will never be sure the final size of group numbers. It's never going to be a proper reduction... So when we have meet large sparse matrix with very low density, the performance will be extremely terrible.... Not make sense to parallelize
     ***NOT PROPERLY WORK SINCE WILL BE REALLY SLOW, SO NOT ADAPTING TO MULTI-BLOCKS***
