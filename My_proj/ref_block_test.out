@@ -2,33 +2,43 @@ Detected 1 CUDA Capable device(s)
 case '-m' found, set to mtx format
 case '-l' found, iterating to find tau
 ****Notic: list func can not be use together with specific tau****
-using matrix file: ./data/weighted/1138_bus.mtx
+using matrix file: ./data/weighted/mesh3em5.mtx
 using blocksize: 8
 Using MTX format
-Start calculating with dimGrid 2, dimBlock 256...
-matrix info: nrows=1138, ncols=1138, nnz=2596
+Start calculating with dimGrid 1, dimBlock 256...
+matrix info: nrows=289, ncols=289, nnz=1089
 rows_per_thread=4
 using tau: 0.9
-new_density: 0.0483462
+new_density: 0.105035
+elapsed time: 3.20205 ms
 using tau: 0.8
-new_density: 0.0480598
+new_density: 0.0995066
+elapsed time: 4.48614 ms
 using tau: 0.6
-new_density: 0.0492861
+new_density: 0.119828
+elapsed time: 9.09414 ms
 using tau: 0.5
-new_density: 0.0528158
+new_density: 0.120678
+elapsed time: 13.271 ms
 using tau: 0.4
-new_density: 0.0526786
+new_density: 0.120678
+elapsed time: 13.5045 ms
 using tau: 0.3
-new_density: 0.0557944
+new_density: 0.122415
+elapsed time: 18.6972 ms
 using tau: 0.2
-new_density: 0.0561807
+new_density: 0.122415
+elapsed time: 19.8892 ms
 using tau: 0.1
-new_density: 0.0561807
+new_density: 0.122415
+elapsed time: 19.8902 ms
 using tau: 0.01
-new_density: 0.0561807
-SUMMARY: 
+new_density: 0.122415
+elapsed time: 19.8902 ms
+=============SUMMARY=================
+matrix size: nrows=289, ncols=289, nnz=1089
 checking for using block size: (8,8)
-original density: 0.0561807
-best tau: 0.2
-best density: 0.0561807
-Group calculation time(GPU): 1657.09 ms
+original density: 0.122415
+best tau: 0.3
+best density: 0.122415
+Total calculation time(GPU): 121.925 ms

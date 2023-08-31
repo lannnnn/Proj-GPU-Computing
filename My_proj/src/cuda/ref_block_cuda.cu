@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     float new_density = 0;
     float best_tau = 0;
 
-    float list_tau[9] = {0.9f, 0.8f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.01f};
+    float list_tau[9] = { 0.9f, 0.8f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.01f };
 
     // This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
     int numBlocksPerSm = 0;
@@ -202,6 +202,7 @@ int main(int argc, char* argv[]) {
 
         new_density = new_csr.calculateBlockDensity(block_cols, block_cols);
         std::cout << "new_density: " << new_density << std::endl;
+        std::cout << "elapsed time: " << elapsedTime << " ms" << std::endl;
         if(block_density < new_density) {
             best_tau = tau;
             block_density = new_density;
@@ -220,16 +221,18 @@ int main(int argc, char* argv[]) {
     CHECK( cudaFree(d_rows_per_thread));
 
     // new_csr.print();
-    std::cout << "SUMMARY: " << std::endl;
+    std::cout << "=============SUMMARY=================" << std::endl;
+    std::cout << "matrix size: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     if(list) {
         std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
         std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
         std::cout << "best tau: " << best_tau << std::endl;
         std::cout << "best density: " << block_density << std::endl;
-        std::cout << "Group calculation time(GPU): " << totalTime << " ms" << std::endl;
+        std::cout << "Total calculation time(GPU): " << totalTime << " ms" << std::endl;
     } else {
         std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
         std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+        std::cout << "using tau: " << tau << std::endl;
         std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
         std::cout << "Group calculation time(GPU): " << elapsedTime << " ms" << std::endl;
     }
