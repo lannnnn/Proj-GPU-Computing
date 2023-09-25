@@ -1,0 +1,10 @@
+Detected 1 CUDA Capable device(s)
+case '-e' found, set to el format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/twitter.el
+using blocksize: 64
+Failed to open file: ./data/large/twitter.el
+Failed to open file: ./data/large/twitter.el
+Using EL format
+not acceptable matrix file

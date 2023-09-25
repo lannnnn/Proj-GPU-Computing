@@ -87,6 +87,11 @@ int main(int argc, char* argv[]) {
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
     cooToCsr(mask_coo, mask_csr);
+
+    // build priority queue
+    std::vector<int> priority_queue;
+    dense_priority_ref(priority_queue, csr);
+
     // free the matrix, use csr
     coo.row_message.clear();
     mask_coo.row_message.clear();
@@ -101,12 +106,14 @@ int main(int argc, char* argv[]) {
     int* d_groupSize;
     int* d_refRow;
     int* d_rows_per_thread;
+    int* d_priority_queue;
     float* d_tau;
 
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_resultList = (int*)malloc(csr.rows * sizeof(int));
     int* h_rowPtr = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_colIdx = (int*)malloc(mask_csr.nnz * sizeof(int));
+    //int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     int* h_groupSize = (int*)malloc(sizeof(int));
 
     int rows_per_thread = 0;
@@ -118,6 +125,7 @@ int main(int argc, char* argv[]) {
 
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_colIdx, mask_csr.nnz * sizeof(int)));
+    // CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupList, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
     CHECK( cudaMalloc((int**)&d_refRow, ref_size * sizeof(int)));
@@ -126,6 +134,10 @@ int main(int argc, char* argv[]) {
 
     CHECK( cudaMemcpy(d_rowPtr, &mask_csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMemcpy(d_colIdx, &mask_csr.colIdx[0], mask_csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    // CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
+    // CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMalloc((int**)&d_priority_queue, csr.rows * sizeof(int)));
+    CHECK( cudaMemcpy(d_priority_queue, &priority_queue[0], csr.rows * sizeof(int), cudaMemcpyHostToDevice));
 
     CHECK( cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping_O1, BLK_SIZE, 0) );
     int totalThreads = deviceProp.multiProcessorCount*numBlocksPerSm*BLK_SIZE;
@@ -167,15 +179,17 @@ int main(int argc, char* argv[]) {
         CHECK( cudaMemcpyAsync(d_groupList, h_groupList, (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice, s1));
         CHECK( cudaMemcpyAsync(d_groupSize, h_groupSize, sizeof(int), cudaMemcpyHostToDevice, s1));
 
-        void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
-                            (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread};
+        // void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
+        //                    (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread};
         // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
+        void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
+                            (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread, (void *)&d_priority_queue};
 
         cudaEventCreate(&startTime);
         cudaEventCreate(&endTime);
         cudaEventRecord(startTime, 0);
 
-        cudaLaunchCooperativeKernel((void*)gpu_ref_grouping_O1, dimGrid, dimBlock, kernelArgs, 0, s1);
+        cudaLaunchCooperativeKernel((void*)gpu_ref_grouping_O2, dimGrid, dimBlock, kernelArgs, 0, s1);
 
         cudaEventRecord(endTime, 0);
         cudaEventSynchronize(startTime);
@@ -201,6 +215,7 @@ int main(int argc, char* argv[]) {
         reordering(csr, new_csr, fine_group);
 
         new_density = new_csr.calculateBlockDensity(block_cols, block_cols);
+        std::cout << "group number: " << count_group(fine_group) << std::endl;
         std::cout << "new_density: " << new_density << std::endl;
         std::cout << "elapsed time: " << elapsedTime << " ms" << std::endl;
         if(block_density < new_density) {

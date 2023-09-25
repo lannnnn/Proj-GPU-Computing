@@ -29,3 +29,5 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
                         std::vector<std::vector<int>> &fine_group, float tau);
 
 void reordering(CSR &omatrix, CSR &nmatrix, std::vector<std::vector<int>> &fine_group);
+
+void dense_priority_ref(std::vector<int> &priority_queue, CSR &csr);

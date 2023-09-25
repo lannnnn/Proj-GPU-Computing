@@ -21,7 +21,7 @@ PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(O
 
 CPPFLAGS := -Iinclude -MMD -MP # -I is a preprocessor flag, not a compiler flag
 LDFLAGS  := -Llib              # -L is a linker flag
-LDLIBS   := -lmetis -lGKlib -lparmetis          
+LDLIBS   :=     
 CUDA_INCLUDE  = -I include/cuda -I $(CUDA_PATH)/include 
 
 all: $(EXEBLOCK) 

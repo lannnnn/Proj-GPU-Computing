@@ -1,0 +1,10 @@
+Detected 1 CUDA Capable device(s)
+case '-m' found, set to mtx format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/apache2.mtx
+using blocksize: 64
+Failed to open file: ./data/large/apache2.mtx
+Failed to open file: ./data/large/apache2.mtx
+Using MTX format
+not acceptable matrix file

@@ -1,5 +1,10 @@
 #include "group.h"
 
+bool cmp(std::pair<int,float>a, std::pair<int,float>b){
+    if(a.second!=b.second)return a.second>b.second;
+    else return a.first<b.first;
+}
+
 float HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx) {
     int dist = 0;
     int cols = baseColIdx.size() + refColIdx.size();
@@ -31,6 +36,21 @@ float HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx)
         dist += (baseColIdx.size() - baseIdx - 1);
     }
     return (float)dist / (float)cols;
+}
+
+void dense_priority_ref(std::vector<int> &priority_queue, CSR &csr) {
+    std::vector<std::pair<int, float>> priority_map;
+
+    for(int i=0; i<csr.rows; i++) {
+        priority_map.push_back(std::make_pair(i, (float) (csr.rowPtr[i+1] - csr.rowPtr[i])/(float)csr.cols));
+    }
+
+    std::sort(priority_map.begin(), priority_map.end(), cmp);
+
+    for(int i=0; i<csr.rows; i++) {
+        priority_queue.push_back(priority_map[i].first);
+        std::cout << priority_queue[i] << " " << priority_map[i].second << std::endl;
+    }
 }
 
 /**** THIS METHOD BENEFITS MORE FROM LARGE BLOCK COLOMN SIZE SINCE IT COMPRESS MORE THE LABEL SIZE ****/

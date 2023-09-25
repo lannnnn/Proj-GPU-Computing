@@ -154,6 +154,23 @@ __device__ void findRef(int* refRow, int* rowPtr, int* colIdx, int* groupList, f
     }
 }
 
+__device__ void findRefPriority(int* refRow, int* ref_queue, int* groupList, int groupSize) {
+    int idx = 0;
+    //clear the ref list
+    for(int i=0; i<ref_size; i++) refRow[i] = -1;
+    
+    for(int i=0; i<groupSize; i++) {
+        // break if the list is full
+        if(idx == ref_size) break;
+        // if already groupped, skip
+        if(groupList[ref_queue[i]] != -1) continue;
+        // if is the first, just add
+        refRow[idx] = ref_queue[i];
+        groupList[ref_queue[i]] = ref_queue[i];
+        idx++;
+    }
+}
+
 // __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
 //                             int* resultList, int* groupSize, int goalVal, int block_cols) {
 //     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -267,7 +284,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
                     if(refRow[i] == -1) continue;
                     dist = HammingDistance(rowPtr, colIdx, refRow[i], idx+goalVal*loopIdx);
                     //printf("threadIdx = %d, refrow = %d, checkrow = %d, dist = %f\n", idx, refRow[i], idx+goalVal*loopIdx, dist);
-                    if(dist < minDist) {
+                    if(dist <= minDist) {
                         tarrow = refRow[i];
                         minDist = dist;
                     }
@@ -307,6 +324,61 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
         loopIdx = 0;
         if(idx == 0) {
             findRef(refRow, rowPtr, colIdx, groupList, tau[0], groupSize[0]);
+        }
+        
+	    grid.sync();
+        // printf("threadIdx = %d, rowStart = %d, rows_per_thread = %d\n", idx, rowStart, rows_per_thread[0]);
+
+        if(idx*row_size < groupSize[0])
+        while((idx + loopIdx*goalVal) < groupSize[0] && loopIdx < rows_per_thread[0]) {
+            minDist = tau[0];
+            tarrow = -1;
+            // compare between each groups
+            if(groupList[idx + loopIdx*goalVal]==-1) {
+                for(int i=0; i<ref_size; i++) {
+                    if(refRow[i] == -1) continue;
+                    dist = HammingDistance(rowPtr, colIdx, refRow[i], idx + loopIdx*goalVal);
+                    // printf("threadIdx = %d, refrow = %d, checkrow = %d, dist = %f\n", idx, refRow[i], idx+goalVal*loopIdx, dist);
+                    if(dist < minDist) {
+                        tarrow = refRow[i];
+                        minDist = dist;
+                    }
+                }
+            }
+
+            if(tarrow!=-1) {
+                // combineGroup(groupInfo[tarrow], groupInfo[idx]);
+                groupList[idx + loopIdx*goalVal] = tarrow;
+            }
+            loopIdx++;
+            // printf("threadIdx = %d,  %d %d %d %d\n", idx, refRow[0], refRow[1], refRow[2], refRow[3]);
+        } 
+
+        grid.sync();
+
+    } while(refRow[ref_size-1]!=-1);
+
+    return;
+}
+
+// self define priority for referring rows
+__global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread, int* ref_queue) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    int tarrow;
+    int gap=0;
+    int goalVal = (groupSize[0] + rows_per_thread[0] - 1) / rows_per_thread[0];
+    int loopIdx = 0;
+    auto grid = cooperative_groups::this_grid();
+    float minDist;
+    float dist;
+
+    // while still have rows not groupped
+    do { 
+        // find the ref rows
+
+        loopIdx = 0;
+        if(idx == 0) {
+            findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
         }
         
 	    grid.sync();

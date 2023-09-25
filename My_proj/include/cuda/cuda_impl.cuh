@@ -48,5 +48,6 @@ __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList
                                     int* resultList, int* groupSize, int goalVal, int block_cols);
 __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow);
 __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread);
+__global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread, int* ref_queue);
 
 #endif

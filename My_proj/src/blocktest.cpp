@@ -20,9 +20,11 @@ int main(int argc, char* argv[]) {
     float fine_tau = 0.8;
     int print = 0;
     int mtx = 0, el = 0;
+    int list = 0;
+    float tau = 0.9;
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
@@ -59,6 +61,14 @@ int main(int argc, char* argv[]) {
     for (int i=0; i<csr.rows; i++) { 
         coarse_group.push_back(i);
     }
+
+    // build priority queue
+    // std::vector<int> priority_queue;
+    // dense_priority_ref(priority_queue, csr);
+
+    // for(int i=0; i<csr.rows; i++) {
+    //     std::cout << priority_queue[i] << std::endl;
+    // }
 
     start=clock();
     fine_grouping(coarse_group, csr, fine_group, fine_tau);
