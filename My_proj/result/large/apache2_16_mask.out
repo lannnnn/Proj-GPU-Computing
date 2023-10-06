@@ -1,0 +1,39 @@
+Detected 1 CUDA Capable device(s)
+case '-m' found, set to mtx format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/apache2.mtx
+using blocksize: 64
+Using MTX format
+Start calculating with dimGrid 28, dimBlock 256...
+matrix info: nrows=715176, ncols=715176, nnz=2766523
+rows_per_thread=100
+using tau: 0.9
+group number: 4832
+new_density: 0.00915763
+elapsed time: 45640.6 ms
+using tau: 0.8
+group number: 13316
+new_density: 0.0104814
+elapsed time: 85740.4 ms
+using tau: 0.6
+group number: 52976
+new_density: 0.0104739
+elapsed time: 941102 ms
+using tau: 0.5
+group number: 55424
+new_density: 0.0104859
+elapsed time: 1.03444e+06 ms
+using tau: 0.4
+group number: 55424
+new_density: 0.0104859
+elapsed time: 1.03444e+06 ms
+using tau: 0.3
+group number: 98512
+new_density: 0.0104859
+elapsed time: 2.89689e+06 ms
+using tau: 0.2
+group number: 369648
+new_density: 0.0104859
+elapsed time: 8.72291e+06 ms
+using tau: 0.1

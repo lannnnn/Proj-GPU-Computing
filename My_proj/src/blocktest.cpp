@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
+    print_matrix(coo, 1);
     // free the matrix, use csr
     coo.row_message.clear();
 
@@ -63,32 +64,32 @@ int main(int argc, char* argv[]) {
     }
 
     // build priority queue
-    // std::vector<int> priority_queue;
-    // dense_priority_ref(priority_queue, csr);
+    std::vector<int> priority_queue;
+    dense_priority_ref(priority_queue, csr);
 
     // for(int i=0; i<csr.rows; i++) {
     //     std::cout << priority_queue[i] << std::endl;
     // }
 
-    start=clock();
-    fine_grouping(coarse_group, csr, fine_group, fine_tau);
-    end=clock();
+    // start=clock();
+    // fine_grouping(coarse_group, csr, fine_group, fine_tau);
+    // end=clock();
 
-    double endtime=(double)(end-start)/CLOCKS_PER_SEC;
+    // double endtime=(double)(end-start)/CLOCKS_PER_SEC;
 
-    if(print) {
-        std::cout << "Reordered row rank:" << std::endl;
-        print_vec(fine_group);  
-    }
+    // if(print) {
+    //     std::cout << "Reordered row rank:" << std::endl;
+    //     print_vec(fine_group);  
+    // }
 
-    CSR new_csr(csr.rows, csr.cols, csr.nnz);
-    reordering(csr, new_csr, fine_group);
+    // CSR new_csr(csr.rows, csr.cols, csr.nnz);
+    // reordering(csr, new_csr, fine_group);
 
-    std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
-    std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
-    std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
+    // std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
+    // std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
+    // std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    // std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    // std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
 
     return 0;
 }

@@ -8,8 +8,8 @@
 #SBATCH --account=flavio.vella.tesi
 #SBATCH --time=05:00:00
     
-#SBATCH --output=result/large/twitter_priority_16.out     
-#SBATCH --error=result/large/twitter_priority_16.err     
+#SBATCH --output=result/large/twitter_1_mask_dist.out     
+#SBATCH --error=result/large/twitter_1_mask_dist.err     
 
 #module load cuda/12.1
 

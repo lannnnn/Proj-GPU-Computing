@@ -1,0 +1,53 @@
+Detected 1 CUDA Capable device(s)
+case '-m' found, set to mtx format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/rajat29.mtx
+using blocksize: 64
+Using MTX format
+Start calculating with dimGrid 28, dimBlock 256...
+matrix info: nrows=643994, ncols=643994, nnz=4866270
+rows_per_thread=90
+using tau: 0.9
+group number: 7495
+new_density: 0.00563746
+elapsed time: 32208.6 ms
+using tau: 0.8
+group number: 16193
+new_density: 0.00568471
+elapsed time: 52242.1 ms
+using tau: 0.6
+group number: 88456
+new_density: 0.006615
+elapsed time: 295964 ms
+using tau: 0.5
+group number: 161557
+new_density: 0.00704065
+elapsed time: 526626 ms
+using tau: 0.4
+group number: 191191
+new_density: 0.00752462
+elapsed time: 583578 ms
+using tau: 0.3
+group number: 357013
+new_density: 0.00710703
+elapsed time: 1.35508e+06 ms
+using tau: 0.2
+group number: 534293
+new_density: 0.0066586
+elapsed time: 1.942e+06 ms
+using tau: 0.1
+group number: 558613
+new_density: 0.00639506
+elapsed time: 1.99269e+06 ms
+using tau: 0.01
+group number: 558613
+new_density: 0.00639516
+elapsed time: 1.99272e+06 ms
+=============SUMMARY=================
+matrix size: nrows=643994, ncols=643994, nnz=4866270
+checking for using block size: (64,64)
+original density: 0.00628527
+best tau: 0.4
+best density: 0.00752462
+Total calculation time(GPU): 8.77311e+06 ms

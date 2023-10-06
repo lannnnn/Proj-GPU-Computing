@@ -1,0 +1,43 @@
+Detected 1 CUDA Capable device(s)
+case '-m' found, set to mtx format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/delaunay_n20.mtx
+using blocksize: 64
+Using MTX format
+Start calculating with dimGrid 28, dimBlock 256...
+matrix info: nrows=1048576, ncols=1048576, nnz=3145686
+rows_per_thread=147
+using tau: 0.9
+group number: 18688
+new_density: 0.00433716
+elapsed time: 99422.6 ms
+using tau: 0.8
+group number: 43264
+new_density: 0.00459621
+elapsed time: 187681 ms
+using tau: 0.6
+group number: 182272
+new_density: 0.005636
+elapsed time: 916052 ms
+using tau: 0.5
+group number: 374272
+new_density: 0.00592983
+elapsed time: 2.10574e+06 ms
+using tau: 0.4
+group number: 361472
+new_density: 0.0059857
+elapsed time: 1.99606e+06 ms
+using tau: 0.3
+group number: 618752
+new_density: 0.0058381
+elapsed time: 3.40995e+06 ms
+using tau: 0.2
+group number: 755072
+new_density: 0.00576443
+elapsed time: 3.92655e+06 ms
+using tau: 0.1
+group number: 755072
+new_density: 0.00576487
+elapsed time: 3.92697e+06 ms
+using tau: 0.01

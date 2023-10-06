@@ -1,0 +1,53 @@
+Detected 1 CUDA Capable device(s)
+case '-m' found, set to mtx format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/kron_g500-logn16.mtx
+using blocksize: 64
+Using MTX format
+Start calculating with dimGrid 28, dimBlock 256...
+matrix info: nrows=65536, ncols=65536, nnz=2456398
+rows_per_thread=10
+using tau: 0.9
+group number: 2188
+new_density: 0.00229135
+elapsed time: 37419.3 ms
+using tau: 0.8
+group number: 19588
+new_density: 0.00187594
+elapsed time: 345431 ms
+using tau: 0.6
+group number: 34770
+new_density: 0.00176363
+elapsed time: 740779 ms
+using tau: 0.5
+group number: 38264
+new_density: 0.0016714
+elapsed time: 835172 ms
+using tau: 0.4
+group number: 38373
+new_density: 0.00166867
+elapsed time: 837210 ms
+using tau: 0.3
+group number: 39097
+new_density: 0.00166852
+elapsed time: 863220 ms
+using tau: 0.2
+group number: 39485
+new_density: 0.00163906
+elapsed time: 868206 ms
+using tau: 0.1
+group number: 39648
+new_density: 0.00162415
+elapsed time: 870158 ms
+using tau: 0.01
+group number: 39759
+new_density: 0.00161453
+elapsed time: 871633 ms
+=============SUMMARY=================
+matrix size: nrows=65536, ncols=65536, nnz=2456398
+checking for using block size: (64,64)
+original density: 0.00124315
+best tau: 0.9
+best density: 0.00229135
+Total calculation time(GPU): 6.26923e+06 ms

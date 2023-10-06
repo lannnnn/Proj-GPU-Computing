@@ -1,7 +1,7 @@
 #include "group.h"
 
 bool cmp(std::pair<int,float>a, std::pair<int,float>b){
-    if(a.second!=b.second)return a.second>b.second;
+    if(a.second!=b.second) return a.second>b.second;
     else return a.first<b.first;
 }
 
@@ -29,11 +29,11 @@ float HammingDistance(std::vector<int> &baseColIdx, std::vector<int> &refColIdx)
     }
     // if ref is at end, add all the red as non-equal
     if(baseIdx >= baseColIdx.size()) {
-        dist += (refColIdx.size() - refIdx - 1);
+        dist += (refColIdx.size() - refIdx);
     }
     // if base is at end, add all the red as non-equal
     if(refIdx >= refColIdx.size()) {
-        dist += (baseColIdx.size() - baseIdx - 1);
+        dist += (baseColIdx.size() - baseIdx);
     }
     return (float)dist / (float)cols;
 }
@@ -49,7 +49,7 @@ void dense_priority_ref(std::vector<int> &priority_queue, CSR &csr) {
 
     for(int i=0; i<csr.rows; i++) {
         priority_queue.push_back(priority_map[i].first);
-        std::cout << priority_queue[i] << " " << priority_map[i].second << std::endl;
+        // std::cout << priority_map[i].first << " " << priority_map[i].second << std::endl;
     }
 }
 

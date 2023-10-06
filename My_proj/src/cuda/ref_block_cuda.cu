@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
 
     // build priority queue
     std::vector<int> priority_queue;
-    dense_priority_ref(priority_queue, csr);
+    dense_priority_ref(priority_queue, mask_csr);
 
     // free the matrix, use csr
     coo.row_message.clear();
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     int* h_resultList = (int*)malloc(csr.rows * sizeof(int));
     int* h_rowPtr = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_colIdx = (int*)malloc(mask_csr.nnz * sizeof(int));
-    //int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
+    // int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     int* h_groupSize = (int*)malloc(sizeof(int));
 
     int rows_per_thread = 0;

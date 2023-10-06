@@ -1,0 +1,53 @@
+Detected 1 CUDA Capable device(s)
+case '-e' found, set to el format
+case '-l' found, iterating to find tau
+****Notic: list func can not be use together with specific tau****
+using matrix file: ./data/large/twitter.el
+using blocksize: 64
+Using EL format
+Start calculating with dimGrid 28, dimBlock 256...
+matrix info: nrows=444815, ncols=465017, nnz=833540
+rows_per_thread=63
+using tau: 0.9
+group number: 3520
+new_density: 0.00110412
+elapsed time: 18116.8 ms
+using tau: 0.8
+group number: 12032
+new_density: 0.000965411
+elapsed time: 39646 ms
+using tau: 0.6
+group number: 25728
+new_density: 0.000914422
+elapsed time: 57562 ms
+using tau: 0.5
+group number: 29184
+new_density: 0.000900853
+elapsed time: 62429.9 ms
+using tau: 0.4
+group number: 29312
+new_density: 0.000899134
+elapsed time: 62692.3 ms
+using tau: 0.3
+group number: 30656
+new_density: 0.000895655
+elapsed time: 64203.1 ms
+using tau: 0.2
+group number: 30912
+new_density: 0.000896413
+elapsed time: 64514 ms
+using tau: 0.1
+group number: 31104
+new_density: 0.00089616
+elapsed time: 64762.9 ms
+using tau: 0.01
+group number: 31104
+new_density: 0.00089616
+elapsed time: 64765 ms
+=============SUMMARY=================
+matrix size: nrows=444815, ncols=465017, nnz=833540
+checking for using block size: (64,64)
+original density: 0.000756782
+best tau: 0.9
+best density: 0.00110412
+Total calculation time(GPU): 498692 ms

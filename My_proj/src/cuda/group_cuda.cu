@@ -171,80 +171,36 @@ __device__ void findRefPriority(int* refRow, int* ref_queue, int* groupList, int
     }
 }
 
-// __global__ void gpu_grouping(int* rowPtr, int* colIdx, float tau, int* groupList, GroupInfo* groupInfo, 
-//                             int* resultList, int* groupSize, int goalVal, int block_cols) {
-//     int idx = blockDim.x * blockIdx.x + threadIdx.x;
-//     int group_thread = 0;
-//     // take (rows_per_thread) rows for one thread
-//     int tarrow, refrow;
-//     int gap=0;
-//     cudaError_t error; 
-//     int mutaxVal = goalVal;
+__device__ void findRefPriorityDist(int* refRow, int* ref_queue, int* rowPtr, int* colIdx, int* groupList, int groupSize) {
+    int idx = 0;
+    int cnt = 0;
+    //clear the ref list
+    for(int i=0; i<ref_size; i++) refRow[i] = -1;
+    
+    for(int i=0; i<groupSize; i++) {
+        // break if the list is full
+        if(idx == ref_size) break;
+        // if already groupped, skip
+        if(groupList[ref_queue[i]] != -1) continue;
+        // if is the first, just add
+        if(idx == 0) {
+            refRow[idx] = ref_queue[i];
+            groupList[ref_queue[i]] = ref_queue[i];
+            idx++;
+            continue;
+        }
 
-//     int groups = rows_per_thread;
-//     int change = 1;
+        for(cnt = 0; cnt<idx; ++cnt) {
+            if(HammingDistance(rowPtr, colIdx, refRow[cnt], ref_queue[i]) == 1) break;
+        }
 
-//     // build the groupInfo
-//     if(idx < groupSize[0]) {
-//         buildGroupInfo(rowPtr, colIdx, groupList, resultList, groupInfo[idx], idx, block_cols);
-//     }
-
-//     atomicAdd((int*) &g_mutex, 1);
-//     while (g_mutex != mutaxVal) {}
-//     mutaxVal += goalVal;
-
-//     // for(int n=0; n<3; n++) {
-//     while(change) { // loop till only one thread have group_thread
-//         if(idx%groups==0 && idx < groupSize[0]) {
-//             if((groupSize[0] - idx) >= groups)
-//                 group_thread = groups;
-//             else
-//                 group_thread = groupSize[0] - idx;
-//         }
-
-//         // compare between each groups
-//         if(group_thread > 1) {
-//             for(int i=0; i<group_thread; i++) {
-//                 tarrow = idx+i; // define the group used as base
-//                 if(groupInfo[tarrow].alive==0) continue; 
-//                 for(int j=i+1; j<group_thread; j++) {
-//                     refrow = idx+j;   // define the group which should be compared for
-//                     if(groupInfo[refrow].alive==0) continue; 
-//                     if(HammingDistance(groupInfo[tarrow], groupInfo[refrow]) < tau) {
-//                         combineGroup(groupInfo[tarrow], groupInfo[refrow]);
-//                     }
-//                 }
-//             }
-//         }
-        
-//         if(groups >= groupSize[0]) change = 0;
-//         groups = groups* 4;
-//         // if(groups >= groupSize[0]) change = 0;
-        
-//         atomicAdd((int*) &g_mutex, 1);
-//         while (g_mutex != mutaxVal) {}
-//         mutaxVal +=goalVal;
-//         // printf("threadIdx = %d, groups = %d, change = %d\n", idx, groups, change);
-//     }
-
-//     // after group, change the groupList in the thread 0
-//     if(idx == 0) {
-//         groupList[0] = 0;
-//         gap = 0; // initialize the gap to 0
-//         for(int i=0; i<groupSize[0]; i++) {
-//             if(groupInfo[i].alive == 1) {
-//                 groupList[gap+1] = groupList[gap] + groupInfo[i].size;
-//                 // printf("%d ", groupList[gap+1]);
-//                 for(int j=0; j<groupInfo[i].size; j++) {
-//                     resultList[groupList[gap]+j] = groupInfo[i].rows[j];
-//                 }
-//                 gap ++;
-//             }
-//         }
-//     }
-
-//     return;
-// }
+        if(cnt >= idx) {
+            refRow[idx] = ref_queue[i];
+            groupList[ref_queue[i]] = ref_queue[i];
+            idx++;
+        }
+    }
+}
 
 __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -284,7 +240,7 @@ __global__ void gpu_ref_grouping(int* rowPtr, int* colIdx, float* tau, int* grou
                     if(refRow[i] == -1) continue;
                     dist = HammingDistance(rowPtr, colIdx, refRow[i], idx+goalVal*loopIdx);
                     //printf("threadIdx = %d, refrow = %d, checkrow = %d, dist = %f\n", idx, refRow[i], idx+goalVal*loopIdx, dist);
-                    if(dist <= minDist) {
+                    if(dist < minDist) {
                         tarrow = refRow[i];
                         minDist = dist;
                     }
@@ -378,7 +334,8 @@ __global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* g
 
         loopIdx = 0;
         if(idx == 0) {
-            findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
+            //findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
+            findRefPriorityDist(refRow, ref_queue, rowPtr, colIdx, groupList, groupSize[0]);
         }
         
 	    grid.sync();
