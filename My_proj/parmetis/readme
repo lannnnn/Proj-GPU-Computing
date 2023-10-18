@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=/home/shuxin.zheng/Proj-GPU-Computing/My_proj/lib:$LD_LIBRARY_PATH
+

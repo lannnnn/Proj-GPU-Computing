@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include "mpi.h"
+#include <GKlib.h>
+#include "parmetis.h"
+#include "utilities.h"
+#include "group.h"
+#include <fstream>
+#include <iostream>
+#include <vector>
+
+int main( int argc, char *argv[] ) {
+   std::string* str;
+   char* endStr;
+   int mtx = 0;
+   int el = 0;
+   int block_cols = 64;
+
+   if(argc < 4) {
+      std::cout<<"Usage parameter list: <matrix file> <format(1,2)> <partition file>"<<std::endl;
+      return 0;
+   }
+
+   std::string filename;// = "../data/unweighted/cs_department.el";
+   endStr = std::find(argv[1], argv[1]+100, '\0');
+   (filename).assign(argv[1], endStr);
+   if(atoi(argv[2]) == 1) mtx = 1;
+   if(atoi(argv[2]) == 2) el = 1;
+
+   COO coo;
+   //COO mask_coo ;
+   // method allow inordered input data
+   if(mtx) {
+      coo = readMTXFileUnweighted(filename);
+      //mask_coo = readMTXFileMask(filename, block_cols);
+   } else {
+      coo = readELFileUnweighted(filename);
+      //mask_coo = readELFileMask(filename, block_cols);
+   }
+
+   CSR csr(coo.rows, coo.cols, coo.nnz);
+   //CSR mask_csr(mask_coo.rows, mask_coo.cols, mask_coo.nnz);
+   // csr to coo, build the rankMap at same time
+   cooToCsr(coo, csr);
+
+   endStr = std::find(argv[3], argv[3]+100, '\0');
+   (filename).assign(argv[3], endStr);
+
+   std::ifstream fin;
+   fin.open(filename,std::ios_base::in);
+   if (!fin.is_open()) {
+      std::cout << "Failed to open file: " << filename << std::endl;
+      return 0;
+   }
+
+   std::string line;
+
+   // Skip header lines
+   while (std::getline(fin, line) && line[0] == '%') {
+      // Skip comment lines
+   }
+
+   std::vector<std::vector<int>> fine_group(csr.rows+1);
+
+   int group_idx;
+   int idx = 0;
+
+   do {
+      std::istringstream iss(line);
+      iss >> group_idx;
+      // std::cout << line << std::endl;
+      // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
+      fine_group[group_idx].push_back(idx);
+      idx++;
+   } while((std::getline(fin, line)));
+
+   fin.close();
+
+   CSR new_csr(csr.rows, csr.cols, csr.nnz);
+   reordering(csr, new_csr, fine_group);
+
+   float new_density = new_csr.calculateBlockDensity(block_cols, block_cols);
+
+   std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+   std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+
+   return(0);
+}

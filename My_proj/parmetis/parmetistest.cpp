@@ -3,51 +3,69 @@
 #include <string.h>
 #include <sys/time.h>
 #include "mpi.h"
+#include <GKlib.h>
 #include "parmetis.h"
 #include "utilities.h"
 #include "group.h"
+#include <fstream>
+#include <iostream>
 
 int main( int argc, char *argv[] ) {
+   std::string* str;
+   char* endStr;
+   int mtx = 0;
+   int el = 0;
 
-   int irank,nproc; // always int?
+   std::string filename = "../data/unweighted/cs_department.el";
+   if(argc >=2) {
+      endStr = std::find(argv[1], argv[1]+100, '\0');
+      (filename).assign(argv[1], endStr);
+   }
+   if(argc >=3) {
+      if(atoi(argv[2]) == 1) mtx = 1;
+      if(atoi(argv[2]) == 2) el = 1;
+   }
 
-   std::string filename = "./data/unweighted/cs_department.el";
+   COO coo ;
    // method allow inordered input data
-   COO coo = readELFileWeighted(filename);
-   // print_matrix(matrix, block_rows); //print matrix message
+   if(mtx) {
+      coo = readMTXFileUnweighted(filename);
+   } else {
+      coo = readELFileUnweighted(filename);
+   }
 
-   // init label list for distance calculation
-   std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
-   std::multimap<int, int, std::greater<int>> rankMap;
+   int edge = coo.nnz;
+   // build edge for graph(if (1,2) then (2,1))
+   for(int i=0; i<coo.rows; i++) {
+      for(auto it : coo.row_message[i].nzValue){
+	      if(coo.row_message[it.first].nzValue[i]) {
+            edge --;
+         } else {
+            coo.row_message[it.first].nzValue[i] = 1;
+            coo.nnz++;
+         }
+      }
+   }
+
+   //coo.nnz = edge * 2;
 
    CSR csr(coo.rows, coo.cols, coo.nnz);
    // csr to coo, build the rankMap at same time
    cooToCsr(coo, csr);
 
-   // construct adjacency array
+   std::ofstream outfile;
+   outfile.open("../data/convert/out.graph");
 
-   std::cout << "Try to test with metis ............." << std::endl;
-
-   idx_t nVertices = csr.rows;
-   idx_t nWeights = 1;
-   idx_t nParts = 2;
-   idx_t objval;
-   std::vector<idx_t> part(nVertices, 0);
-
-   int ret = METIS_PartGraphKway(&nVertices, &nWeights, csr.rowPtr.data(), csr.colIdx.data(),
-                                NULL, NULL, NULL, &nParts, NULL, NULL, NULL,
-                                &objval, part.data());
-
-   std::cout << ret << std::endl;
-
-   CSR metis_csr(csr.rows, csr.cols, csr.nnz);
-   std::vector<std::vector<int>> mesh_group(part.size());
-   for(int i=0; i<part.size(); i++) {
-        mesh_group[part[i]].push_back(i);
+   outfile << csr.rows << " " << coo.nnz/2 << std::endl;
+   for(int i=0; i< csr.rows; i++) {
+      // if(csr.rowPtr[i+1] - csr.rowPtr[i] == 0) continue;
+      for(int j=csr.rowPtr[i]; j<csr.rowPtr[i+1]; j++) {
+         outfile << csr.colIdx[j] << " ";
+      }
+      outfile  << std::endl;
    }
 
-   print_vec(mesh_group);
-   //reordering(csr, metis_csr, mesh_group);
+   outfile.close();
 
    return(0);
 }

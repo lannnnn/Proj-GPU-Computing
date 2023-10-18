@@ -71,19 +71,19 @@ int main(int argc, char* argv[]) {
     //     std::cout << priority_queue[i] << std::endl;
     // }
 
-    // start=clock();
-    // fine_grouping(coarse_group, csr, fine_group, fine_tau);
-    // end=clock();
+    start=clock();
+    fine_grouping(coarse_group, csr, fine_group, fine_tau);
+    end=clock();
 
-    // double endtime=(double)(end-start)/CLOCKS_PER_SEC;
+    double endtime=(double)(end-start)/CLOCKS_PER_SEC;
 
-    // if(print) {
-    //     std::cout << "Reordered row rank:" << std::endl;
-    //     print_vec(fine_group);  
-    // }
+    if(print) {
+        std::cout << "Reordered row rank:" << std::endl;
+        print_vec(fine_group);  
+    }
 
-    // CSR new_csr(csr.rows, csr.cols, csr.nnz);
-    // reordering(csr, new_csr, fine_group);
+    CSR new_csr(csr.rows, csr.cols, csr.nnz);
+    reordering(csr, new_csr, fine_group);
 
     // std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     // std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
