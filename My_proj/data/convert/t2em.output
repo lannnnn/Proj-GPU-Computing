@@ -1,0 +1,37 @@
+******************************************************************************
+METIS 5.2.1 Copyright 1998-22, Regents of the University of Minnesota
+ (HEAD: unknown, Built on: Oct  9 2023, 03:04:20)
+ size of idx_t: 32bits, real_t: 32bits, idx_t *: 64bits
+
+Graph Information -----------------------------------------------------------
+ Name: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/convert/t2em.graph, #Vertices: 921632, #Edges: 1836768, #Parts: 5551
+
+Options ---------------------------------------------------------------------
+ ptype=kway, objtype=cut, ctype=shem, rtype=greedy, iptype=metisrb
+ dbglvl=0, ufactor=1.030, no2hop=NO, minconn=NO, contig=NO
+ ondisk=NO, nooutput=NO
+ seed=-1, niparts=-1, niter=10, ncuts=1
+
+Direct k-way Partitioning ---------------------------------------------------
+ - Edgecut: 170475, communication volume: 295921.
+
+ - Balance:
+     constraint #0:  1.018 out of 0.006
+
+ - Most overweight partition:
+     pid: 1790, actual: 169, desired: 166, ratio: 1.02.
+
+ - Subdomain connectivity: max: 9, min: 3, avg: 5.86
+
+ - The original graph had 5 connected components and the resulting
+   partitioning after removing the cut edges has 5557 components.
+Timing Information ----------------------------------------------------------
+  I/O:                             0.501 sec
+  Partitioning:                    3.153 sec   (METIS time)
+  Reporting:                       0.108 sec
+
+Memory Information ----------------------------------------------------------
+  Max memory used:                94.010 MB
+  rusage.ru_maxrss:              119.508 MB
+  proc/self/stat/VmPeak:         142.207 MB
+******************************************************************************

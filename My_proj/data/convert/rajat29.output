@@ -1,0 +1,37 @@
+******************************************************************************
+METIS 5.2.1 Copyright 1998-22, Regents of the University of Minnesota
+ (HEAD: unknown, Built on: Oct  9 2023, 03:04:20)
+ size of idx_t: 32bits, real_t: 32bits, idx_t *: 64bits
+
+Graph Information -----------------------------------------------------------
+ Name: /home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/convert/rajat29.graph, #Vertices: 643994, #Edges: 2781122, #Parts: 903
+
+Options ---------------------------------------------------------------------
+ ptype=kway, objtype=cut, ctype=shem, rtype=greedy, iptype=metisrb
+ dbglvl=0, ufactor=1.030, no2hop=NO, minconn=NO, contig=NO
+ ondisk=NO, nooutput=NO
+ seed=-1, niparts=-1, niter=10, ncuts=1
+
+Direct k-way Partitioning ---------------------------------------------------
+ - Edgecut: 1263367, communication volume: 1302091.
+
+ - Balance:
+     constraint #0:  1.029 out of 0.001
+
+ - Most overweight partition:
+     pid: 40, actual: 734, desired: 713, ratio: 1.03.
+
+ - Subdomain connectivity: max: 800, min: 4, avg: 25.04
+
+ - The original graph had 2805 connected components and the resulting
+   partitioning after removing the cut edges has 5509 components.
+Timing Information ----------------------------------------------------------
+  I/O:                             0.542 sec
+  Partitioning:                    2.081 sec   (METIS time)
+  Reporting:                       0.091 sec
+
+Memory Information ----------------------------------------------------------
+  Max memory used:               119.340 MB
+  rusage.ru_maxrss:              153.605 MB
+  proc/self/stat/VmPeak:         171.516 MB
+******************************************************************************

@@ -160,9 +160,17 @@ COO readELFileUnweighted(const std::string& filename) {
         coo.nnz++;
         if(col > coo.cols) coo.cols = col;
     } while((std::getline(fin, line)));
-    coo.rows = current_row+1;
+    coo.rows = current_row+2;
     coo.cols++;
     fin.close();
+
+    // if(coo.cols > coo.rows) {
+    //     for(int i=coo.rows; i<=coo.cols; i++) {
+    //         coo.row_message.push_back(ROW());
+    //     }
+    // }
+    // coo.rows = coo.cols;
+
     return coo;
 }
 
@@ -212,7 +220,7 @@ COO readELFileMask(const std::string& filename, int block_col) {
         }
         if(col > coo.cols) coo.cols = col;
     } while((std::getline(fin, line)));
-    coo.rows = current_row+1;
+    coo.rows = current_row+2;
     coo.cols++;
     fin.close();
     return coo;

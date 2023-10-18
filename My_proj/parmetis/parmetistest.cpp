@@ -37,13 +37,19 @@ int main( int argc, char *argv[] ) {
    int edge = coo.nnz;
    // build edge for graph(if (1,2) then (2,1))
    for(int i=0; i<coo.rows; i++) {
-      for(auto it : coo.row_message[i].nzValue){
-	      if(coo.row_message[it.first].nzValue[i]) {
+      for(auto it=begin(coo.row_message[i].nzValue);it!=end(coo.row_message[i].nzValue);){
+         if(it->first == i) {
+            it = coo.row_message[i].nzValue.erase(it);
+            coo.nnz--;
+            continue;
+         }
+	      if(coo.row_message[it->first].nzValue[i]) {
             edge --;
          } else {
-            coo.row_message[it.first].nzValue[i] = 1;
+            coo.row_message[it->first].nzValue[i] = 1;
             coo.nnz++;
          }
+         ++it;
       }
    }
 
@@ -60,7 +66,7 @@ int main( int argc, char *argv[] ) {
    for(int i=0; i< csr.rows; i++) {
       // if(csr.rowPtr[i+1] - csr.rowPtr[i] == 0) continue;
       for(int j=csr.rowPtr[i]; j<csr.rowPtr[i+1]; j++) {
-         outfile << csr.colIdx[j] << " ";
+         outfile << csr.colIdx[j]+1 << " ";
       }
       outfile  << std::endl;
    }
