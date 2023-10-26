@@ -32,6 +32,7 @@ int main( int argc, char *argv[] ) {
    COO coo;
    //COO mask_coo ;
    // method allow inordered input data
+
    if(mtx) {
       coo = readMTXFileUnweighted(filename);
       //mask_coo = readMTXFileMask(filename, block_cols);
@@ -43,7 +44,12 @@ int main( int argc, char *argv[] ) {
    CSR csr(coo.rows, coo.cols, coo.nnz);
    //CSR mask_csr(mask_coo.rows, mask_coo.cols, mask_coo.nnz);
    // csr to coo, build the rankMap at same time
+   
    cooToCsr(coo, csr);
+   coo.clean();
+
+   std::cout << "original block density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+   std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
 
    endStr = std::find(argv[3], argv[3]+100, '\0');
    (filename).assign(argv[3], endStr);
@@ -62,7 +68,7 @@ int main( int argc, char *argv[] ) {
       // Skip comment lines
    }
 
-   std::vector<std::vector<int>> fine_group(csr.rows+1);
+   std::vector<std::vector<int>> fine_group(csr.rows);
 
    int group_idx;
    int idx = 0;
@@ -81,10 +87,19 @@ int main( int argc, char *argv[] ) {
    CSR new_csr(csr.rows, csr.cols, csr.nnz);
    reordering(csr, new_csr, fine_group);
 
-   float new_density = new_csr.calculateBlockDensity(block_cols, block_cols);
+   std::cout << csr.colIdx.size() << std::endl;
+   std::cout << new_csr.colIdx.size() << std::endl;
 
-   std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-   std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+   csr.clean();
+
+   float block_density = new_csr.calculateBlockDensity(block_cols, block_cols);
+   //std::cout << "yet ok ? " << std::endl;
+   float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
+   //std::cout << "whats wrong?" << std::endl;
+
+   std::cout << "new block density: " << block_density << std::endl;
+   std::cout << "new store density: " << store_density << std::endl;
+
 
    return(0);
 }

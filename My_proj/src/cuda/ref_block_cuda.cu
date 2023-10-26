@@ -58,6 +58,8 @@ int main(int argc, char* argv[]) {
         readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list);
     }
 
+    std::string ofilename = filename + ".reorder";
+
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;
     
@@ -93,8 +95,8 @@ int main(int argc, char* argv[]) {
     dense_priority_ref(priority_queue, mask_csr);
 
     // free the matrix, use csr
-    coo.row_message.clear();
-    mask_coo.row_message.clear();
+    coo.clean();
+    mask_coo.clean();
 
     if(list) {iter_time = 9; tau = list_tau[0];}
     else {iter_time = 1;}
@@ -204,9 +206,13 @@ int main(int argc, char* argv[]) {
         CHECK( cudaMemcpyAsync(h_groupList, d_groupList, (csr.rows) * sizeof(int), cudaMemcpyDeviceToHost, s1));
         // print_pointer(h_groupList, csr.rows);
         std::vector<std::vector<int>> fine_group(csr.rows+1);
+        std::vector<int> res_vec(csr.rows);
+
         for(int i=0; i<csr.rows; i++) {
             fine_group[h_groupList[i]].push_back(i);
         }
+        printRes(fine_group, res_vec, ofilename);
+        res_vec.clear();
         // print_pointer(h_resultList, csr.rows);
         if(print) {
             std::cout << "Reordered row rank:" << std::endl;

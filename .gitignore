@@ -1,0 +1,7 @@
+*.d
+*.o
+obj/
+*.err
+data/large
+*.out
+My_proj/result/large

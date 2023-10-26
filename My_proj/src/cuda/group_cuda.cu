@@ -334,8 +334,8 @@ __global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* g
 
         loopIdx = 0;
         if(idx == 0) {
-            //findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
-            findRefPriorityDist(refRow, ref_queue, rowPtr, colIdx, groupList, groupSize[0]);
+            findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
+            //findRefPriorityDist(refRow, ref_queue, rowPtr, colIdx, groupList, groupSize[0]);
         }
         
 	    grid.sync();

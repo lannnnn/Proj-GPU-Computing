@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;
-    std::cout << "using tau: " << fine_tau << std::endl;
+    std::cout << "using tau: " << tau << std::endl;
 
     COO coo ;
 
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     CSR csr(coo.rows, coo.cols, coo.nnz);
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
-    print_matrix(coo, 1);
+    // print_matrix(coo, 1);
     // free the matrix, use csr
     coo.row_message.clear();
 
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     // }
 
     start=clock();
-    fine_grouping(coarse_group, csr, fine_group, fine_tau);
+    fine_grouping(coarse_group, csr, fine_group, tau);
     end=clock();
 
     double endtime=(double)(end-start)/CLOCKS_PER_SEC;
@@ -81,6 +81,11 @@ int main(int argc, char* argv[]) {
         std::cout << "Reordered row rank:" << std::endl;
         print_vec(fine_group);  
     }
+
+    std::string ofilename = filename + ".reorder";
+
+    std::vector<int> res_vec(csr.rows);
+    printRes(fine_group, res_vec, ofilename);
 
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);

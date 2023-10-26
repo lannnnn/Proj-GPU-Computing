@@ -91,7 +91,7 @@ COO readELFileWeighted(const std::string& filename) {
 
     // initial the csr struct without size message
     COO coo(0, 0, 0);
-    int current_row = 0;
+    int current_row = -1;
     do {
         std::istringstream iss(line);
         iss >> row >> col >> value;
@@ -101,11 +101,11 @@ COO readELFileWeighted(const std::string& filename) {
             std::cout << "Please enter the row with ascending order...." << std::endl;
             return COO();
         }
-        for(int i=current_row; i<=row; i++) {
+        for(int i=current_row; i<row; i++) {
             coo.row_message.push_back(ROW());
             current_row ++;
         }
-        current_row --;
+
         coo.row_message[row].nzRowCount++;
         coo.row_message[row].nzValue[col] = value;
         coo.nnz++;
@@ -140,36 +140,36 @@ COO readELFileUnweighted(const std::string& filename) {
 
     // initial the csr struct without size message
     COO coo(0, 0, 0);
-    int current_row = 0;
+    int current_row = -1;
     do {
         std::istringstream iss(line);
         iss >> row >> col;
         // std::cout << line << std::endl;
         // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
-        if(row < current_row) {
-            std::cout << "Please enter the row with ascending order...." << std::endl;
-            return COO();
-        }
-        for(int i=current_row; i<=row; i++) {
+        // if(row < current_row) {
+        //     std::cout << "Please enter the row with ascending order...." << std::endl;
+        //     return COO();
+        // }
+        for(int i=current_row; i<row; i++) {
             coo.row_message.push_back(ROW());
             current_row ++;
         }
-        current_row --;
+
         coo.row_message[row].nzRowCount++;
         coo.row_message[row].nzValue[col] = 1;
         coo.nnz++;
         if(col > coo.cols) coo.cols = col;
     } while((std::getline(fin, line)));
-    coo.rows = current_row+2;
+    coo.rows = current_row+1;
     coo.cols++;
     fin.close();
 
-    // if(coo.cols > coo.rows) {
-    //     for(int i=coo.rows; i<=coo.cols; i++) {
-    //         coo.row_message.push_back(ROW());
-    //     }
-    // }
-    // coo.rows = coo.cols;
+    if(coo.cols > coo.rows) {
+        for(int i=coo.rows; i<=coo.cols; i++) {
+            coo.row_message.push_back(ROW());
+        }
+    }
+    coo.rows = coo.cols;
 
     return coo;
 }
@@ -426,4 +426,25 @@ int cooToCsrRank(COO &coo, CSR &csr, std::multimap<int, int, std::greater<int>> 
                 rankMap.insert(std::make_pair(coo.row_message[i].nzValue.size(), i));
         }
     }
+};
+
+void printRes(std::vector<std::vector<int>> label, std::vector<int> res_vec, const std::string& filename) {
+    std::ofstream outfile;
+    outfile.open(filename);
+    int groupCnt = 0;
+
+    for(int i=0; i<label.size(); i++) {
+        for(int j = 0; j< label[i].size(); j++) {
+            res_vec[label[i][j]] = groupCnt;
+        }
+        if(label[i].size() > 0) groupCnt++;
+    }
+
+    for(int i=0; i< res_vec.size(); i++) {
+        outfile << res_vec[i] << std::endl;
+    }
+
+    outfile.close();
+
+    return;
 };

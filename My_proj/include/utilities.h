@@ -23,3 +23,4 @@ void print_pointer(int* p, int size);
 int count_group(std::vector<std::vector<int>> label);
 void print_vec(std::vector<std::vector<int>> label);
 void print_map(std::multimap<int, int, std::greater<int>> rankMap);
+void printRes(std::vector<std::vector<int>> label, std::vector<int> res_vec, const std::string& filename);

@@ -30,6 +30,7 @@ struct CSR
     void clean();
     void addRow(struct ROW &row);
     double calculateBlockDensity(int block_rows, int block_cols);
+    double calculateStoreSize(int block_rows, int block_cols);
     void print();
 
     //destructor cleans all arrays
