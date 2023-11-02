@@ -22,9 +22,10 @@ int main(int argc, char* argv[]) {
     int mtx = 0, el = 0;
     int list = 0;
     float tau = 0.9;
+    std::string ofilename = filename + ".reorder";
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list, &ofilename);
     }
 
     std::cout << "using matrix file: " << filename << std::endl;
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]) {
     // }
 
     start=clock();
-    fine_grouping(coarse_group, csr, fine_group, tau);
+    //fine_grouping(coarse_group, csr, fine_group, tau);
+    fine_grouping(priority_queue, csr, fine_group, tau);
     end=clock();
 
     double endtime=(double)(end-start)/CLOCKS_PER_SEC;
@@ -82,19 +84,22 @@ int main(int argc, char* argv[]) {
         print_vec(fine_group);  
     }
 
-    std::string ofilename = filename + ".reorder";
-
     std::vector<int> res_vec(csr.rows);
+
     printRes(fine_group, res_vec, ofilename);
 
     CSR new_csr(csr.rows, csr.cols, csr.nnz);
     reordering(csr, new_csr, fine_group);
 
-    // std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
-    // std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
-    // std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    // std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    // std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
+    std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
+    std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
+    std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
+    std::cout << "group number: " << count_group(fine_group) << std::endl;
+    std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+    float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
+    std::cout << "new store density: " << store_density << std::endl;
+    std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
 
     return 0;
 }

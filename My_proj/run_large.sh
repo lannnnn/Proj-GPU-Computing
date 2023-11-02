@@ -8,23 +8,11 @@
 #SBATCH --account=flavio.vella.tesi
 #SBATCH --time=05:00:00
     
-#SBATCH --output=result/large/wtf.out     
-#SBATCH --error=result/large/wtf.err     
+#SBATCH --output=datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.out     
+#SBATCH --error=datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.err   
 
 #module load cuda/12.1
 
-#srun ./ref_block_cuda -f ./data/large/kron_g500-logn16.mtx -t 0.2 -b 64 -m -l
-#srun ./ref_block_cuda -f ./data/large/twitter.el -t 0.2 -b 64 -e -l
-#srun ./ref_block_cuda -f ./data/large/t2em.mtx -t 0.2 -b 64 -m -l
-#srun ./ref_block_cuda -f ./data/large/apache2.mtx -t 0.2 -b 64 -m -l
-#srun ./ref_block_cuda -f ./data/large/rajat29.mtx -t 0.2 -b 64 -m -l
-#srun ./ref_block_cuda -f ./data/large/delaunay_n20.mtx -t 0.6 -b 64 -m 
+srun ./ref_block_cuda_128 -f ./datasets/small/email-Enron/email-Enron.mtx -t 0.7 -b 64 -m -o ./datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.reorder
 
-#srun ./ref_block_cuda_64 -f ./data/large/twitter.el -t 0.9 -b 64 -e
-#srun ./ref_block_cuda_128 -f ./data/large/kron_g500-logn16.mtx -t 0.9 -b 64 -m
-#srun ./ref_block_cuda_128 -f ./data/large/t2em.mtx -t 0.9 -b 64 -m
-#srun ./ref_block_cuda_128 -f ./data/large/apache2.mtx -t 0.9 -b 64 -m
-#srun ./ref_block_cuda_128 -f ./data/large/rajat29.mtx -t 0.9 -b 64 -m
-srun ./ref_block_cuda_128 -f ./data/large/delaunay_n20.mtx -t 0.9 -b 64 -m
-
-#srun ./blocktest -f ./data/large/twitter.el -t 0.9 -b 64 -e
+#srun ./blocktest_pri -f ./datasets/toy/ca-AstroPh/ca-AstroPh.mtx -t 0.9 -b 64 -m -o ./datasets/toy/ca-AstroPh/cpu_pri/ca-AstroPh_cpu_tau_0.9.reorder

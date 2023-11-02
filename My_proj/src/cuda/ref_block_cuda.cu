@@ -53,12 +53,13 @@ int main(int argc, char* argv[]) {
     std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
     float tau = list_tau[4];
+    std::string ofilename = filename + ".reorder";
 
     if(argc >= 2) {
-        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list);
+        readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list, &ofilename);
     }
 
-    std::string ofilename = filename + ".reorder";
+
 
     std::cout << "using matrix file: " << filename << std::endl;
     std::cout << "using blocksize: " << block_cols << std::endl;

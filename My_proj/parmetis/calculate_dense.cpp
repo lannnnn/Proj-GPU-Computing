@@ -80,12 +80,15 @@ int main( int argc, char *argv[] ) {
       // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
       fine_group[group_idx].push_back(idx);
       idx++;
+      if(idx >= csr.rows) break;
    } while((std::getline(fin, line)));
 
    fin.close();
 
    CSR new_csr(csr.rows, csr.cols, csr.nnz);
+   //std::cout << "reordering" << std::endl;
    reordering(csr, new_csr, fine_group);
+   //std::cout << "reorder finished" << std::endl;
 
    std::cout << csr.colIdx.size() << std::endl;
    std::cout << new_csr.colIdx.size() << std::endl;
@@ -100,6 +103,7 @@ int main( int argc, char *argv[] ) {
    std::cout << "new block density: " << block_density << std::endl;
    std::cout << "new store density: " << store_density << std::endl;
 
+   std::cout << "group number: " << count_group(fine_group) << std::endl;
 
    return(0);
 }

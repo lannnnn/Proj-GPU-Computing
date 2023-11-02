@@ -40,14 +40,14 @@ int main( int argc, char *argv[] ) {
       for(auto it=begin(coo.row_message[i].nzValue);it!=end(coo.row_message[i].nzValue);){
          if(it->first == i) {
             it = coo.row_message[i].nzValue.erase(it);
-            coo.nnz--;
+            edge --;
             continue;
          }
-	      if(coo.row_message[it->first].nzValue[i]) {
-            edge --;
-         } else {
-            coo.row_message[it->first].nzValue[i] = 1;
-            coo.nnz++;
+	      if(coo.row_message[it->first].nzValue[i] && it->first > i) {
+               edge --;
+         // } else {
+            // coo.row_message[it->first].nzValue[i] = 1;
+            // coo.nnz++;
          }
          ++it;
       }
@@ -60,9 +60,9 @@ int main( int argc, char *argv[] ) {
    cooToCsr(coo, csr);
 
    std::ofstream outfile;
-   outfile.open("../data/convert/out.graph");
+   outfile.open("../datasets/convert/out.graph");
 
-   outfile << csr.rows << " " << coo.nnz/2 << std::endl;
+   outfile << csr.rows << " " << edge << std::endl;
    for(int i=0; i< csr.rows; i++) {
       // if(csr.rowPtr[i+1] - csr.rowPtr[i] == 0) continue;
       for(int j=csr.rowPtr[i]; j<csr.rowPtr[i+1]; j++) {

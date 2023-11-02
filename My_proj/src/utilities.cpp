@@ -10,7 +10,7 @@ void helpMesg() {
     std::cout<<"    -l to iterate tau to find the best block density"<<std::endl;
 }
 
-void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print, int* mtx, int* el, int* list) {
+void readConfig(int argc, char** argv, std::string* filename, int* block_cols, float* fine_tau, int* print, int* mtx, int* el, int* list, std::string* ofilename) {
     std::string* str;
     char* endStr;
     for(int i = 1;i < argc; ++i){
@@ -59,6 +59,11 @@ void readConfig(int argc, char** argv, std::string* filename, int* block_cols, f
                 std::cout<<"case \'-l\' found, iterating to find tau"<<std::endl;
                 std::cout<<"****Notic: list func can not be use together with specific tau****"<<std::endl;
                 *list = 1;
+                break;
+            case 'o':
+                endStr = std::find(argv[i+1], argv[i+1]+100, '\0');
+                (*ofilename).assign(argv[i+1], endStr);
+                i++;
                 break;
             default:
                 std::cout<<"unrecognized input, pls check the help info"<<std::endl;
