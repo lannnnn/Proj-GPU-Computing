@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     float new_density = 0;
     float best_tau = 0;
 
-    float list_tau[9] = { 0.9f, 0.8f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.01f };
+    float list_tau[10] = { 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.01 };
 
     // This will launch a grid that can maximally fill the GPU, on the default stream with kernel arguments
     int numBlocksPerSm = 0;
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     std::string filename = "/home/shuxin.zheng/Proj-GPU-Computing/My_proj/data/unweighted/seventh_graders.el";
 
     float tau = list_tau[4];
-    std::string ofilename = filename + ".reorder";
+    std::string ofilename;
 
     if(argc >= 2) {
         readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list, &ofilename);
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
     coo.clean();
     mask_coo.clean();
 
-    if(list) {iter_time = 9; tau = list_tau[0];}
+    if(list) {iter_time = 10; tau = list_tau[0];}
     else {iter_time = 1;}
  
     // device memory allocation
@@ -212,7 +212,8 @@ int main(int argc, char* argv[]) {
         for(int i=0; i<csr.rows; i++) {
             fine_group[h_groupList[i]].push_back(i);
         }
-        printRes(fine_group, res_vec, ofilename);
+        std::string oname = ofilename + "." + std::to_string(tau);
+        printRes(fine_group, res_vec, oname);
         res_vec.clear();
         // print_pointer(h_resultList, csr.rows);
         if(print) {
@@ -224,6 +225,7 @@ int main(int argc, char* argv[]) {
         new_density = new_csr.calculateBlockDensity(block_cols, block_cols);
         std::cout << "group number: " << count_group(fine_group) << std::endl;
         std::cout << "new_density: " << new_density << std::endl;
+        std::cout << "new store density: " << new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols << std::endl;
         std::cout << "elapsed time: " << elapsedTime << " ms" << std::endl;
         if(block_density < new_density) {
             best_tau = tau;
@@ -248,12 +250,14 @@ int main(int argc, char* argv[]) {
     if(list) {
         std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
         std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+        std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
         std::cout << "best tau: " << best_tau << std::endl;
         std::cout << "best density: " << block_density << std::endl;
         std::cout << "Total calculation time(GPU): " << totalTime << " ms" << std::endl;
     } else {
         std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
         std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+        std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
         std::cout << "using tau: " << tau << std::endl;
         std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
         std::cout << "Group calculation time(GPU): " << elapsedTime << " ms" << std::endl;

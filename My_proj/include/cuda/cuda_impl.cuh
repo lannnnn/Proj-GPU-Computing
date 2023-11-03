@@ -7,7 +7,7 @@
 #include <cooperative_groups.h>
 #include "../utilities.h"
 
-#define ref_size 1
+#define ref_size 128
 #define row_size 4
 
 #define CHECK(call)                                   \

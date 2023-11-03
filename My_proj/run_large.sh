@@ -8,11 +8,11 @@
 #SBATCH --account=flavio.vella.tesi
 #SBATCH --time=05:00:00
     
-#SBATCH --output=datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.out     
-#SBATCH --error=datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.err   
+#SBATCH --output=datasets/toy/inf-power/cpu/inf-power_cpu.out     
+#SBATCH --error=datasets/toy/inf-power/cpu/inf-power_cpu.err   
 
 #module load cuda/12.1
 
-srun ./ref_block_cuda_128 -f ./datasets/small/email-Enron/email-Enron.mtx -t 0.7 -b 64 -m -o ./datasets/small/email-Enron/ref_128/email-Enron_ref_128_tau_0.7.reorder
+#srun ./ref_block_cuda_128 -f ./datasets/small/email-Enron/email-Enron.mtx -l -b 64 -m -o ./datasets/small/email-Enron/ref_128/email-Enron_ref_128.reorder
 
-#srun ./blocktest_pri -f ./datasets/toy/ca-AstroPh/ca-AstroPh.mtx -t 0.9 -b 64 -m -o ./datasets/toy/ca-AstroPh/cpu_pri/ca-AstroPh_cpu_tau_0.9.reorder
+srun ./blocktest -f ./datasets/toy/inf-power/inf-power.mtx -l -b 64 -m -o ./datasets/toy/inf-power/cpu/inf-power_cpu.reorder

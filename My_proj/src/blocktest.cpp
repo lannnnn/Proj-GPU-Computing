@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
     int list = 0;
     float tau = 0.9;
     std::string ofilename = filename + ".reorder";
+    float list_tau[10] = { 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.01 };
 
     if(argc >= 2) {
         readConfig(argc, argv, &filename, &block_cols, &tau, &print, &mtx, &el, &list, &ofilename);
@@ -66,40 +67,52 @@ int main(int argc, char* argv[]) {
 
     // build priority queue
     std::vector<int> priority_queue;
+    std::vector<int> priority_queue_dup;
     dense_priority_ref(priority_queue, csr);
 
     // for(int i=0; i<csr.rows; i++) {
     //     std::cout << priority_queue[i] << std::endl;
     // }
 
-    start=clock();
-    //fine_grouping(coarse_group, csr, fine_group, tau);
-    fine_grouping(priority_queue, csr, fine_group, tau);
-    end=clock();
-
-    double endtime=(double)(end-start)/CLOCKS_PER_SEC;
-
-    if(print) {
-        std::cout << "Reordered row rank:" << std::endl;
-        print_vec(fine_group);  
-    }
-
-    std::vector<int> res_vec(csr.rows);
-
-    printRes(fine_group, res_vec, ofilename);
-
-    CSR new_csr(csr.rows, csr.cols, csr.nnz);
-    reordering(csr, new_csr, fine_group);
+    int iter_time = 0;
+    if(list) {iter_time = 10; tau = list_tau[0];}
+    else {iter_time = 1;}
 
     std::cout << "matrix info: nrows=" << csr.rows << ", ncols=" << csr.cols << ", nnz=" << csr.nnz << std::endl;
     std::cout << "checking for using block size: (" << block_cols << "," << block_cols << ")" << std::endl;
     std::cout << "original density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
     std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
-    std::cout << "group number: " << count_group(fine_group) << std::endl;
-    std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
-    float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
-    std::cout << "new store density: " << store_density << std::endl;
-    std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
+
+    for(int itr=0; itr<iter_time; itr++) {
+        if(itr > 0) tau = list_tau[itr];
+        priority_queue_dup = priority_queue;
+        start=clock();
+        //fine_grouping(coarse_group, csr, fine_group, tau);
+        fine_grouping(priority_queue_dup, csr, fine_group, tau);
+        end=clock();
+
+        double endtime=(double)(end-start)/CLOCKS_PER_SEC;
+
+        if(print) {
+            std::cout << "Reordered row rank:" << std::endl;
+            print_vec(fine_group);  
+        }
+
+        std::vector<int> res_vec(csr.rows);
+
+        std::string oname = ofilename + "." + std::to_string(tau);
+        printRes(fine_group, res_vec, oname);
+
+        CSR new_csr(csr.rows, csr.cols, csr.nnz);
+        reordering(csr, new_csr, fine_group);
+        std::cout << "using tau: " << tau << std::endl;
+        std::cout << "group number: " << count_group(fine_group) << std::endl;
+        std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+        float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
+        std::cout << "new store density: " << store_density << std::endl;
+        std::cout << "Group calculation time(CPU):"<<endtime*1000<<"ms"<< std::endl;
+        fine_group.clear();
+    }
 
     return 0;
 }
