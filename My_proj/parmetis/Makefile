@@ -16,6 +16,7 @@ PAR := $(wildcard $(PAR_DIR)/*.cpp)
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o
 CAL_OBJ := $(OBJ_DIR)/calculate_dense.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o 
+CNT_OBJ := $(OBJ_DIR)/count_dimension.o
 
 METIS_INCLUDE = -I../include
 METIS_LIB = -L../lib
@@ -25,13 +26,16 @@ LDFLAGS  := -Llib              # -L is a linker flag
 LDLIBS   := -lmetis -lGKlib -lparmetis
 CUDA_INCLUDE  = -I include/cuda -I $(CUDA_PATH)/include 
 
-all: $(EXEPAR) $(EXECAL)
+all: $(EXEPAR) $(EXECAL) count_dimension
 
 $(EXEPAR): parmetistest.o 
 	$(MPICC) $(COPTS) $(LDFLAGS) -o $@ $(PAR_OBJ) $(METIS_LIB) $(LDLIBS)
 
 $(EXECAL): calculate_dense.o 
 	$(MPICC) $(COPTS) $(LDFLAGS) -o $@ $(CAL_OBJ) $(METIS_LIB) $(LDLIBS)
+
+count_dimension: count_dimension.o
+	$(MPICC) $(COPTS) $(LDFLAGS) -o $@ $(CNT_OBJ) $(METIS_LIB) $(LDLIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CC) $(COPTS) $(CPPFLAGS) $(METIS_INCLUDE) -c $< -o $@
@@ -41,6 +45,9 @@ parmetistest.o:
 
 calculate_dense.o: 
 	$(MPICC) $(COPTS) $(CPPFLAGS) $(METIS_INCLUDE) -c $(PAR_DIR)/calculate_dense.cpp -o $(OBJ_DIR)/$@ $(LDLIBS)
+
+count_dimension.o:
+	$(MPICC) $(COPTS) $(CPPFLAGS) $(METIS_INCLUDE) -c $(PAR_DIR)/count_dimension.cpp -o $(OBJ_DIR)/$@ $(LDLIBS)
 
 $(BIN_DIR) $(OBJ_DIR):
 	mkdir -p $@

@@ -34,22 +34,31 @@ int main(int argc, char* argv[]) {
     std::cout << "using tau: " << tau << std::endl;
 
     COO coo ;
+    COO mask_coo ;
 
     if(mtx==1)  {
         coo = readMTXFileUnweighted(filename);
+        mask_coo = readMTXFileMask(filename, block_cols);
         std::cout << "Using MTX format" << std::endl;
     } else {
         coo = readELFileUnweighted(filename);
+        mask_coo = readELFileMask(filename, block_cols);
         std::cout << "Using EL format" << std::endl;
     }
-
+    if(coo.rows == 0) {
+        std::cout << "not acceptable matrix file" << std::endl;
+        return -1;
+    }
     // init label list for distance calculation
     std::vector<std::vector<int>> label(coo.rows); //,std::vector<int>(labelSize));
     // std::multimap<int, int, std::greater<int>> rankMap;
 
     CSR csr(coo.rows, coo.cols, coo.nnz);
+    CSR mask_csr(mask_coo.rows, mask_coo.cols, mask_coo.nnz);
+    CSR new_csr(csr.rows, csr.cols, csr.nnz);
     // csr to coo, build the rankMap at same time
     cooToCsr(coo, csr);
+    cooToCsr(mask_coo, mask_csr);
     // print_matrix(coo, 1);
     // free the matrix, use csr
     coo.row_message.clear();
@@ -59,7 +68,6 @@ int main(int argc, char* argv[]) {
     std::vector<int> coarse_group;
     // init fine graind group vector
     // give little more space for blocks in each thread which can not be totally filled
-    std::vector<std::vector<int>> fine_group;
 
     for (int i=0; i<csr.rows; i++) { 
         coarse_group.push_back(i);
@@ -68,7 +76,7 @@ int main(int argc, char* argv[]) {
     // build priority queue
     std::vector<int> priority_queue;
     std::vector<int> priority_queue_dup;
-    dense_priority_ref(priority_queue, csr);
+    dense_priority_ref(priority_queue, mask_csr);
 
     // for(int i=0; i<csr.rows; i++) {
     //     std::cout << priority_queue[i] << std::endl;
@@ -84,11 +92,12 @@ int main(int argc, char* argv[]) {
     std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
 
     for(int itr=0; itr<iter_time; itr++) {
+        std::vector<std::vector<int>> fine_group(csr.rows+1);
         if(itr > 0) tau = list_tau[itr];
         priority_queue_dup = priority_queue;
         start=clock();
         //fine_grouping(coarse_group, csr, fine_group, tau);
-        fine_grouping(priority_queue_dup, csr, fine_group, tau);
+        fine_grouping(priority_queue_dup, mask_csr, fine_group, tau);
         end=clock();
 
         double endtime=(double)(end-start)/CLOCKS_PER_SEC;
@@ -103,7 +112,6 @@ int main(int argc, char* argv[]) {
         std::string oname = ofilename + "." + std::to_string(tau);
         printRes(fine_group, res_vec, oname);
 
-        CSR new_csr(csr.rows, csr.cols, csr.nnz);
         reordering(csr, new_csr, fine_group);
         std::cout << "using tau: " << tau << std::endl;
         std::cout << "group number: " << count_group(fine_group) << std::endl;

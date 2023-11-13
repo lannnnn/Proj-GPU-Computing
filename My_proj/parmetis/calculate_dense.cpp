@@ -73,36 +73,55 @@ int main( int argc, char *argv[] ) {
    int group_idx;
    int idx = 0;
 
+   std::vector<int> dimension;
+   int group_cnt=-1;
+
    do {
       std::istringstream iss(line);
       iss >> group_idx;
       // std::cout << line << std::endl;
       // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
       fine_group[group_idx].push_back(idx);
+      while(group_idx > group_cnt) {
+         dimension.push_back(0);
+         group_cnt++;
+      }
+      dimension[group_idx] ++ ;
       idx++;
       if(idx >= csr.rows) break;
+      
    } while((std::getline(fin, line)));
 
    fin.close();
+
+   double avg = (double) idx / (double) (group_cnt+1);
+   double dev = 0;
+   for(int i=0; i<=group_cnt ;i++) {
+      if(dimension[i] == 0) continue;
+      //outfile << dimension[i] << std::endl;
+      dev += std::pow(dimension[i] - avg, 2);
+   }
+
+   dev = std::pow(dev/(double)(group_cnt+1),0.5);
 
    CSR new_csr(csr.rows, csr.cols, csr.nnz);
    //std::cout << "reordering" << std::endl;
    reordering(csr, new_csr, fine_group);
    //std::cout << "reorder finished" << std::endl;
 
-   std::cout << csr.colIdx.size() << std::endl;
-   std::cout << new_csr.colIdx.size() << std::endl;
-
    csr.clean();
 
    float block_density = new_csr.calculateBlockDensity(block_cols, block_cols);
    //std::cout << "yet ok ? " << std::endl;
    float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
+   float density_dev = new_csr.calculateBlockDensityDev(block_cols, block_cols);
    //std::cout << "whats wrong?" << std::endl;
 
    std::cout << "new block density: " << block_density << std::endl;
    std::cout << "new store density: " << store_density << std::endl;
-
+   std::cout << "new density deviation: " << density_dev << std::endl;
+   std::cout << "new dimension avg: " << avg << std::endl;
+   std::cout << "new dimension deviation: " << dev << std::endl;
    std::cout << "group number: " << count_group(fine_group) << std::endl;
 
    return(0);

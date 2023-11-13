@@ -73,15 +73,19 @@ int coarse_grouping(std::vector<std::vector<int>> coarse_group, CSR matrix,
 void fine_grouping(std::vector<int> &coarse_group, CSR &matrix, 
                         std::vector<std::vector<int>> &fine_group, float tau) {
     int baseRow, targetRow;
-    int size;
+    int size = coarse_group.size();
     std::vector<int> baseColIdx;
     std::vector<int> refColIdx;
     std::vector<int> currentGroup;
+    int index[coarse_group.size()] = {0};
+    int cnt = coarse_group.size();
     while(!coarse_group.empty()) {
-        size = coarse_group.size();
+        //size = coarse_group.size();
         baseRow = coarse_group[0];
         coarse_group.erase(coarse_group.begin());
+        if(index[baseRow] == 1) continue;
         currentGroup.push_back(baseRow);
+        index[baseRow] = 1;    // label the row as groupped
         // build the initial row label
         int col = 0;
         baseColIdx.clear();
@@ -91,9 +95,9 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
         }
 
         // iterate all the rows
-        for(int cnt = 0; cnt < size-1; cnt++) {
-            targetRow = coarse_group[0];
-            coarse_group.erase(coarse_group.begin());
+        for(int idx = 0; idx < size; idx++) {
+            if(index[idx] == 1) continue;
+            targetRow = idx;
 
             // build the referring row label
             refColIdx.clear();
@@ -111,17 +115,17 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
             // if(dist<tau) add, else ignore
             if(dist < tau) {
                 currentGroup.push_back(targetRow);
+                index[idx] = 1;
                 // // calculate the new baseColIdx
                 // for(int i=0; i < matrix.rowPtr[targetRow+1] - matrix.rowPtr[targetRow]; i++) {
                 //     col = matrix.colIdx[matrix.rowPtr[targetRow] + i];
                 //     baseColIdx.erase(std::unique(baseColIdx.begin(), baseColIdx.end()), baseColIdx.end());
                 // }
-            } else {
-                coarse_group.push_back(targetRow);
             }
         }
         // build the new group for rows who still inside
-        fine_group.push_back(currentGroup);
+        for(int i = 0; i < currentGroup.size(); i++)
+            fine_group[currentGroup[0]].push_back(currentGroup[i]);
         currentGroup.clear();
     }
 }
