@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <ctime>
 
 int main( int argc, char *argv[] ) {
    std::string* str;
@@ -48,7 +49,9 @@ int main( int argc, char *argv[] ) {
    cooToCsr(coo, csr);
    coo.clean();
 
-   std::cout << "original block density: " << csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
+   float ori_den = csr.calculateBlockDensity(block_cols, block_cols);
+
+   std::cout << "original block density: " << ori_den << std::endl;
    std::cout << "original store density: " << csr.calculateStoreSize(block_cols, block_cols)/(float)csr.rows / (float)csr.cols << std::endl;
 
    endStr = std::find(argv[3], argv[3]+100, '\0');
@@ -105,9 +108,10 @@ int main( int argc, char *argv[] ) {
    dev = std::pow(dev/(double)(group_cnt+1),0.5);
 
    CSR new_csr(csr.rows, csr.cols, csr.nnz);
-   //std::cout << "reordering" << std::endl;
+   clock_t start = clock();
    reordering(csr, new_csr, fine_group);
-   //std::cout << "reorder finished" << std::endl;
+   clock_t end   = clock();
+   std::cout << "reorder finished in " << (double)(end - start) / CLOCKS_PER_SEC << "seconds" << std::endl;
 
    csr.clean();
 
@@ -119,6 +123,7 @@ int main( int argc, char *argv[] ) {
 
    std::cout << "new block density: " << block_density << std::endl;
    std::cout << "new store density: " << store_density << std::endl;
+   std::cout << "density ratio: " << block_density / ori_den << std::endl;
    std::cout << "new density deviation: " << density_dev << std::endl;
    std::cout << "new dimension avg: " << avg << std::endl;
    std::cout << "new dimension deviation: " << dev << std::endl;

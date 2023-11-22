@@ -16,5 +16,5 @@
 #srun ./ref_block_cuda_128 -f ./datasets/medium/web-Stanford/web-Stanford.mtx -l -b 64 -m -o ./datasets/medium/web-Stanford/ref_128/web-Stanford_ref_128.reorder
 
 #srun ./blocktest -f ./datasets/toy/wiki-Vote/wiki-Vote.mtx -l -b 64 -m -o ./datasets/toy/wiki-Vote/cpu/wiki-Vote.reorder
-#srun ./blocktest -f ./datasets/small/soc-Slashdot0811/soc-Slashdot0811.mtx -l -b 64 -m -o ./datasets/small/soc-Slashdot0811/cpu/soc-Slashdot0811.reorder
-srun ./blocktest -f ./datasets/medium/amazon0312/amazon0312.mtx -t 0.5 -b 64 -m -o ./datasets/medium/amazon0312/cpu/amazon0312.reorder
+srun ./blocktest -f ./datasets/small/mk12-b4/mk12-b4.mtx -l -b 64 -m -o ./datasets/small/mk12-b4/cpu/mk12-b4.reorder
+#srun ./blocktest -f ./datasets/medium/amazon0312/amazon0312.mtx -t 0.5 -b 64 -m -o ./datasets/medium/amazon0312/cpu/amazon0312.reorder

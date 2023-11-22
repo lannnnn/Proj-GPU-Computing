@@ -292,7 +292,7 @@ COO readMTXFileUnweighted(const std::string& filename) {
     // Read matrix size and nnz
     std::istringstream iss(line);
     iss >> rows >> cols >> nnz;
-
+    
     COO coo(rows, cols, nnz);
     while (std::getline(fin, line)) {
         std::istringstream iss(line);
