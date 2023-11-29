@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
     // build priority queue
     std::vector<int> priority_queue;
-    dense_priority_ref(priority_queue, mask_csr);
+    dense_priority_ref(priority_queue, csr);
 
     // free the matrix, use csr
     coo.clean();
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
     int* h_resultList = (int*)malloc(csr.rows * sizeof(int));
     int* h_rowPtr = (int*)malloc((csr.rows+1) * sizeof(int));
-    int* h_colIdx = (int*)malloc(mask_csr.nnz * sizeof(int));
+    int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     // int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     int* h_groupSize = (int*)malloc(sizeof(int));
 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     cudaGetDeviceProperties(&deviceProp, device);
 
     CHECK( cudaMalloc((int**)&d_rowPtr, (csr.rows+1) * sizeof(int)));
-    CHECK( cudaMalloc((int**)&d_colIdx, mask_csr.nnz * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
     // CHECK( cudaMalloc((int**)&d_colIdx, csr.nnz * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupList, (csr.rows+1) * sizeof(int)));
     CHECK( cudaMalloc((int**)&d_groupSize, sizeof(int)));
@@ -135,8 +135,8 @@ int main(int argc, char* argv[]) {
     CHECK( cudaMalloc((float**)&d_tau, sizeof(float)));
     CHECK( cudaMalloc((int**)&d_rows_per_thread, sizeof(int)));
 
-    CHECK( cudaMemcpy(d_rowPtr, &mask_csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
-    CHECK( cudaMemcpy(d_colIdx, &mask_csr.colIdx[0], mask_csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
     // CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     // CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMalloc((int**)&d_priority_queue, csr.rows * sizeof(int)));

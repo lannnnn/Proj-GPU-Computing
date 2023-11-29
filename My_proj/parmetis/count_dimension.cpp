@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "parmetis.h"
+#include "utilities.h"
+#include "group.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -21,58 +24,48 @@ int main( int argc, char *argv[] ) {
     endStr = std::find(argv[1], argv[1]+100, '\0');
     (filename).assign(argv[1], endStr);
 
-    std::ifstream fin;
-    fin.open(filename,std::ios_base::in);
-    if (!fin.is_open()) {
-        std::cout << "Failed to open file: " << filename << std::endl;
-        return 0;
-    }
+    COO coo;
+    int sync = 0;
+    int total = 0;
+    int maxLength = 0;
+    int curLength = 0;
+    int lastIdx = -1;
 
-    std::string line;
+    coo = readMTXFileUnweighted(filename);
 
-    // Skip header lines
-    while (std::getline(fin, line) && line[0] == '%') {
-        // Skip comment lines
-    }
+    // CSR csr(coo.rows, coo.cols, coo.nnz);
+    // //CSR mask_csr(mask_coo.rows, mask_coo.cols, mask_coo.nnz);
+    // // csr to coo, build the rankMap at same time
+   
+    // cooToCsr(coo, csr);
+    // coo.clean();
 
-    std::vector<int> dimension;
-    int group_idx;
-    int group_cnt=-1;
-    int row_cnt=0;
+    std::cout << "matrix built, rows = " << coo.rows << ", cols = " << coo.cols  << std::endl;
 
-    do {
-        std::istringstream iss(line);
-        iss >> group_idx;
-        row_cnt ++;
-        // std::cout << line << std::endl;
-        // std::cout << "current row = " << current_row << ", row = " << row << std::endl;
-        while(group_idx > group_cnt) {
-            dimension.push_back(0);
-            group_cnt++;
+    for(int i=0; i<coo.rows; i++) {
+        //if(i%1000 == 0) std::cout << "it->first " << i << std::endl;
+        for(auto it=begin(coo.row_message[i].nzValue);it!=end(coo.row_message[i].nzValue);++it){
+            //std::cout << "it->first = " << it->first << std::endl;
+            if(it->first < coo.rows && coo.row_message[it->first].nzValue[i]) {
+                sync ++;
+            }
+            if(lastIdx == it->first-1) {
+                curLength += 1;
+            } else {
+                curLength = 1;
+            }
+            if(curLength > maxLength) maxLength = curLength;
+            lastIdx = it->first;
         }
-        dimension[group_idx] ++ ;
-    } while((std::getline(fin, line)));
-
-    fin.close();
-
-    std::string ofilename = filename + ".dim";
-    std::ofstream outfile;
-    double avg = (double) row_cnt / (double) (group_cnt+1);
-    double dev = 0;
-    //outfile.open(ofilename);
-
-    for(int i=0; i<=group_cnt ;i++) {
-        if(dimension[i] == 0) continue;
-        //outfile << dimension[i] << std::endl;
-        dev += std::pow(dimension[i] - avg, 2);
+        lastIdx = -1;
     }
 
-    dev = std::pow(dev/(double)(group_cnt+1),0.5);
+    
 
     //outfile.close();
 
-    std::cout << "mean : " << avg << std::endl;
-    std::cout << "standard deviation : " << dev << std::endl;
+    std::cout << "symmetric ration (symmetric/total) : " << (double)sync / (double)coo.nnz << std::endl;
+    std::cout << "max consecutive nz: " << maxLength << std::endl;
 
     return(0);
 }

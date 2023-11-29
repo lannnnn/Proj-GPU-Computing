@@ -16,7 +16,7 @@ PAR := $(wildcard $(PAR_DIR)/*.cpp)
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 PAR_OBJ := $(OBJ_DIR)/parmetistest.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o
 CAL_OBJ := $(OBJ_DIR)/calculate_dense.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o 
-CNT_OBJ := $(OBJ_DIR)/count_dimension.o
+CNT_OBJ := $(OBJ_DIR)/count_dimension.o $(OBJ_DIR)/utilities.o $(OBJ_DIR)/csr.o $(OBJ_DIR)/group.o 
 
 METIS_INCLUDE = -I../include
 METIS_LIB = -L../lib

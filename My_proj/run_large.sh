@@ -8,13 +8,13 @@
 #SBATCH --account=flavio.vella.tesi
 #SBATCH --time=05:00:00
     
-#SBATCH --output=datasets/medium/amazon0312/cpu/amazon0312_0.5.out     
-#SBATCH --error=datasets/medium/amazon0312/cpu/amazon0312_0.5.err     
+#SBATCH --output=datasets/medium/Chevron3/cpu/unmask.out     
+#SBATCH --error=datasets/medium/Chevron3/cpu/unmask.err     
 
 #module load cuda/12.1
 
-#srun ./ref_block_cuda_128 -f ./datasets/medium/web-Stanford/web-Stanford.mtx -l -b 64 -m -o ./datasets/medium/web-Stanford/ref_128/web-Stanford_ref_128.reorder
+#srun ./ref_block_cuda_128 -f ./datasets/medium/Chevron3/Chevron3.mtx -l -b 64 -m -o ./datasets/medium/Chevron3/ref_128/Chevron3_ref_128.reorder
 
-#srun ./blocktest -f ./datasets/toy/wiki-Vote/wiki-Vote.mtx -l -b 64 -m -o ./datasets/toy/wiki-Vote/cpu/wiki-Vote.reorder
-srun ./blocktest -f ./datasets/small/mk12-b4/mk12-b4.mtx -l -b 64 -m -o ./datasets/small/mk12-b4/cpu/mk12-b4.reorder
-#srun ./blocktest -f ./datasets/medium/amazon0312/amazon0312.mtx -t 0.5 -b 64 -m -o ./datasets/medium/amazon0312/cpu/amazon0312.reorder
+#srun ./blocktest -f ./datasets/toy/GT01R/GT01R.mtx -l -b 64 -m -o ./datasets/toy/GT01R/cpu/GT01R.reorder
+#srun ./blocktest -f ./datasets/small/RFdevice/RFdevice.mtx -l -b 64 -m -o ./datasets/small/RFdevice/cpu/RFdevice.reorder
+srun ./blocktest -f ./datasets/medium/Chevron3/Chevron3.mtx -t 0.5 -b 64 -m -o ./datasets/medium/Chevron3/cpu/unmask.reorder

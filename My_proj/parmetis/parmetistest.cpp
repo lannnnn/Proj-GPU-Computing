@@ -35,7 +35,7 @@ int main( int argc, char *argv[] ) {
    }
 
    int edge = coo.nnz;
-   // build edge for graph(if (1,2) then (2,1))
+   
    for(int i=0; i<coo.rows; i++) {
       for(auto it=begin(coo.row_message[i].nzValue);it!=end(coo.row_message[i].nzValue);){
          if(it->first == i) {
