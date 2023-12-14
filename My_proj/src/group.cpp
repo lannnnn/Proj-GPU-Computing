@@ -70,7 +70,7 @@ int coarse_grouping(std::vector<std::vector<int>> coarse_group, CSR matrix,
 // algorithm:
 //      calculate the distance using HammingDistance? JaccardDistance? 
 //      if distance < (some given value), group in a block
-void fine_grouping(std::vector<int> &coarse_group, CSR &matrix, 
+int fine_grouping(std::vector<int> &coarse_group, CSR &matrix, 
                         std::vector<std::vector<int>> &fine_group, float tau) {
     int baseRow, targetRow;
     int size = coarse_group.size();
@@ -79,6 +79,7 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
     std::vector<int> currentGroup;
     int index[coarse_group.size()] = {0};
     int cnt = coarse_group.size();
+    int iterCnt = 0;
     while(!coarse_group.empty()) {
         //size = coarse_group.size();
         baseRow = coarse_group[0];
@@ -127,7 +128,9 @@ void fine_grouping(std::vector<int> &coarse_group, CSR &matrix,
         for(int i = 0; i < currentGroup.size(); i++)
             fine_group[currentGroup[0]].push_back(currentGroup[i]);
         currentGroup.clear();
+        iterCnt ++;
     }
+    return iterCnt;
 }
 
 void reordering(CSR &omatrix, CSR &nmatrix, std::vector<std::vector<int>> &fine_group) {

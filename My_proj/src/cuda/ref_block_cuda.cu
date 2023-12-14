@@ -110,6 +110,7 @@ int main(int argc, char* argv[]) {
     int* d_refRow;
     int* d_rows_per_thread;
     int* d_priority_queue;
+    int* d_iter_cnt;
     float* d_tau;
 
     int* h_groupList = (int*)malloc((csr.rows+1) * sizeof(int));
@@ -118,6 +119,7 @@ int main(int argc, char* argv[]) {
     int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     // int* h_colIdx = (int*)malloc(csr.nnz * sizeof(int));
     int* h_groupSize = (int*)malloc(sizeof(int));
+    int* h_iter_cnt = (int*)malloc(sizeof(int));
 
     int rows_per_thread = 0;
     
@@ -140,6 +142,7 @@ int main(int argc, char* argv[]) {
     // CHECK( cudaMemcpy(d_rowPtr, &csr.rowPtr[0], (csr.rows+1) * sizeof(int), cudaMemcpyHostToDevice));
     // CHECK( cudaMemcpy(d_colIdx, &csr.colIdx[0], csr.nnz * sizeof(int), cudaMemcpyHostToDevice));
     CHECK( cudaMalloc((int**)&d_priority_queue, csr.rows * sizeof(int)));
+    CHECK( cudaMalloc((int**)&d_iter_cnt, sizeof(int)));
     CHECK( cudaMemcpy(d_priority_queue, &priority_queue[0], csr.rows * sizeof(int), cudaMemcpyHostToDevice));
 
     CHECK( cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, gpu_ref_grouping_O1, BLK_SIZE, 0) );
@@ -185,8 +188,8 @@ int main(int argc, char* argv[]) {
         // void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
         //                    (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread};
         // std::cout << "matrix size: (rows, cols, nnz) = (" << csr.rows << ", " << csr.cols << ", " << csr.nnz << ")" << std::endl;
-        void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList,
-                            (void *)&d_groupSize, (void *)&d_refRow, (void *)&d_rows_per_thread, (void *)&d_priority_queue};
+        void *kernelArgs[] = {(void *)&d_rowPtr, (void *)&d_colIdx, (void *)&d_tau, (void *)&d_groupList, (void *)&d_groupSize, 
+                                (void *)&d_refRow, (void *)&d_rows_per_thread, (void *)&d_priority_queue, (void*)&d_iter_cnt};
 
         cudaEventCreate(&startTime);
         cudaEventCreate(&endTime);
@@ -205,6 +208,7 @@ int main(int argc, char* argv[]) {
         cudaEventDestroy(endTime);
 
         CHECK( cudaMemcpyAsync(h_groupList, d_groupList, (csr.rows) * sizeof(int), cudaMemcpyDeviceToHost, s1));
+        CHECK( cudaMemcpyAsync(h_iter_cnt, d_iter_cnt, sizeof(int), cudaMemcpyDeviceToHost, s1));
         // print_pointer(h_groupList, csr.rows);
         std::vector<std::vector<int>> fine_group(csr.rows+1);
         std::vector<int> res_vec(csr.rows);
@@ -226,6 +230,7 @@ int main(int argc, char* argv[]) {
         std::cout << "group number: " << count_group(fine_group) << std::endl;
         std::cout << "new_density: " << new_density << std::endl;
         std::cout << "new store density: " << new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols << std::endl;
+        std::cout << "iterating for " << h_iter_cnt[0] << " times" << std::endl;
         std::cout << "elapsed time: " << elapsedTime << " ms" << std::endl;
         if(block_density < new_density) {
             best_tau = tau;

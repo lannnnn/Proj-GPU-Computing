@@ -318,7 +318,7 @@ __global__ void gpu_ref_grouping_O1(int* rowPtr, int* colIdx, float* tau, int* g
 }
 
 // self define priority for referring rows
-__global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread, int* ref_queue) {
+__global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* groupList, int* groupSize, int* refRow, int* rows_per_thread, int* ref_queue, int* iterCnt) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int tarrow;
     int gap=0;
@@ -327,6 +327,7 @@ __global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* g
     auto grid = cooperative_groups::this_grid();
     float minDist;
     float dist;
+    iterCnt[0] = 0;
 
     // while still have rows not groupped
     do { 
@@ -334,6 +335,7 @@ __global__ void gpu_ref_grouping_O2(int* rowPtr, int* colIdx, float* tau, int* g
 
         loopIdx = 0;
         if(idx == 0) {
+            iterCnt[0] ++;
             findRefPriority(refRow, ref_queue, groupList, groupSize[0]);
             //findRefPriorityDist(refRow, ref_queue, rowPtr, colIdx, groupList, groupSize[0]);
         }

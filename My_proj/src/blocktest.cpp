@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
         priority_queue_dup = priority_queue;
         start=clock();
         //fine_grouping(coarse_group, csr, fine_group, tau);
-        fine_grouping(priority_queue_dup, csr, fine_group, tau);
+        int iterCnt = fine_grouping(priority_queue_dup, csr, fine_group, tau);
         end=clock();
 
         double endtime=(double)(end-start)/CLOCKS_PER_SEC;
@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
         reordering(csr, new_csr, fine_group);
         std::cout << "using tau: " << tau << std::endl;
         std::cout << "group number: " << count_group(fine_group) << std::endl;
+        std::cout << "iterating for " << iterCnt << " times" << std::endl;
         std::cout << "new density: " << new_csr.calculateBlockDensity(block_cols, block_cols) << std::endl;
         float store_density = new_csr.calculateStoreSize(block_cols, block_cols)/(float)new_csr.rows / (float)new_csr.cols;
         std::cout << "new store density: " << store_density << std::endl;
